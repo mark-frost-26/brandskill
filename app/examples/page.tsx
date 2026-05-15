@@ -37,15 +37,23 @@ export default function ExamplesPage() {
                 href={`/examples/${brand.slug}`}
                 className="bg-white rounded-2xl border border-gray-200 p-5 hover:border-brand-200 hover:shadow-md transition-all group"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex gap-1.5">
+                <div className="mb-4">
+                  <div className="flex gap-3">
                     {brand.colors.map(c => (
-                      <div key={c} className="w-4 h-4 rounded-full border border-gray-100" style={{ background: c }} />
+                      <div key={c} className="flex flex-col items-center gap-1">
+                        <div
+                          className="w-8 h-8 rounded-lg border border-gray-200 shadow-sm"
+                          style={{ background: c }}
+                        />
+                        <span className="text-[10px] font-mono text-gray-400 tracking-tight">{c}</span>
+                      </div>
                     ))}
                   </div>
+                </div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="font-bold text-gray-900 group-hover:text-brand-700 transition-colors">{brand.name}</h2>
                   <span className="text-xs text-gray-400 font-mono">{brand.domain}</span>
                 </div>
-                <h2 className="font-bold text-gray-900 mb-1 group-hover:text-brand-700 transition-colors">{brand.name}</h2>
                 <p className="text-gray-500 text-sm">{brand.desc}</p>
                 <div className="mt-3 text-xs text-brand-600 font-medium group-hover:underline">
                   View skill file →
