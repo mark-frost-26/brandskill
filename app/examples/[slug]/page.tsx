@@ -1,474 +1,599 @@
-import { Navbar } from '@/components/layout/Navbar'
+'use client'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 
-type BrandExample = {
+// ─── Types ───
+
+type ColorSwatch = { hex: string; name: string; desc: string }
+type VoiceRule = { title: string; good: string; bad: string }
+type SocialPost = { platform: string; copy: string; handle?: string }
+type AntiPattern = { rule: string; reason: string }
+type ImageRule = { always: string[]; never: string[] }
+
+type Brand = {
   name: string
   domain: string
-  tagline: string
-  about: string
-  colors: { hex: string; name: string }[]
-  fonts: { name: string; role: string }[]
-  voiceRules: { do: string; dont: string }[]
-  templates: { platform: string; example: string }[]
-  antiPatterns: string[]
-  imageStyle: string
-  keywords: string[]
+  principle: string
+  voice: string
+  target: string
+  differentiator: string
+  positioning: string
+  colors: ColorSwatch[]
+  primaryFont: { name: string; desc: string }
+  bodyFont: { name: string; size: string; desc: string }
+  voiceRules: VoiceRule[]
+  socialPosts: SocialPost[]
+  emailSubjects: string[]
+  emailOpener: string
+  blogOpener: string
+  adHeadlines: string[]
+  antiPatterns: AntiPattern[]
+  imageRules: ImageRule
   bg: string
+  fg: string
   accent: string
+  accentAlt: string
+  sections: string[]
 }
 
-const EXAMPLES: Record<string, BrandExample> = {
+// ─── Brand Data ───
+
+const BRANDS: Record<string, Brand> = {
   apple: {
-    name: 'Apple',
-    domain: 'apple.com',
-    tagline: 'Designed to surprise. Built to last.',
-    about: 'Apple communicates through restraint. Every word is chosen because it cannot be removed. The brand doesn\'t explain — it reveals.',
+    name: 'Apple', domain: 'apple.com',
+    principle: "Reveal, don't explain",
+    voice: 'Confident. Never arrogant.',
+    target: 'People who take their work seriously',
+    differentiator: 'Taste — the details others skip',
+    positioning: "Apple sells the feeling of creative superiority — the sense that the person using Apple tools is doing their best work. The differentiation is taste: the claim that the details others skip are the details that matter most.",
     colors: [
-      { hex: '#1d1d1f', name: 'Graphite' },
-      { hex: '#f5f5f7', name: 'Cloud' },
-      { hex: '#0066cc', name: 'Apple Blue' },
-      { hex: '#86868b', name: 'Stone' },
+      { hex: '#1d1d1f', name: 'Graphite', desc: 'Headlines, primary text' },
+      { hex: '#f5f5f7', name: 'Cloud', desc: 'Backgrounds, breathing room' },
+      { hex: '#0066cc', name: 'Apple Blue', desc: 'Links and CTAs only' },
+      { hex: '#ffffff', name: 'White', desc: 'Primary background' },
+      { hex: '#86868b', name: 'Stone', desc: 'Body text, secondary info' },
     ],
-    fonts: [
-      { name: 'SF Pro Display', role: 'Headlines' },
-      { name: 'SF Pro Text', role: 'Body' },
-    ],
+    primaryFont: { name: 'SF Pro Display', desc: 'Tight tracking. Never bold unless size alone isn\'t enough.' },
+    bodyFont: { name: 'SF Pro Text', size: '17px', desc: '1.47 line height for comfortable reading across every surface.' },
     voiceRules: [
-      { do: 'Lead with the feeling, not the feature.', dont: 'List specs before the human benefit.' },
-      { do: 'Sentences end. Not lists.', dont: 'Use bullet points for marketing copy.' },
-      { do: 'One idea per sentence.', dont: 'Stack clauses with conjunctions.' },
+      { title: 'Lead with the feeling, not the feature', good: 'The camera that sees what your eye misses.', bad: '12MP camera with advanced computational photography' },
+      { title: 'Sentences end. Not lists.', good: 'Fast. Beautiful. Yours.', bad: '• Fast performance • Beautiful design • Personalized experience' },
+      { title: 'Lowercase the technology, capitalize the human', good: 'Shot on iPhone. By you.', bad: "Captured Using iPhone 16 Pro's Advanced LiDAR System" },
+      { title: 'One idea per sentence. No conjunctions.', good: 'All-day battery. All-night confidence.', bad: 'It has all-day battery life and you can use it all night without worrying.' },
+      { title: "The product is the proof. Don't argue.", good: 'This is iPhone.', bad: 'iPhone is the best smartphone on the market because...' },
     ],
-    templates: [
-      { platform: 'Instagram', example: 'The display that makes everything else look wrong. Liquid Retina XDR.' },
-      { platform: 'Twitter / X', example: 'iPhone 16. The camera that outthinks the moment.' },
-      { platform: 'Ad Headline', example: 'Shot on iPhone. By you.' },
-      { platform: 'Email Subject', example: 'iPhone. Hello, again.' },
+    socialPosts: [
+      { platform: 'Instagram', handle: '@apple', copy: 'The display that makes everything else look wrong.\n\nLiquid Retina XDR.' },
+      { platform: 'X / Twitter', handle: '@Apple', copy: 'iPhone 16. The camera that outthinks the moment.' },
+      { platform: 'LinkedIn', handle: 'Apple', copy: "The best tool is the one that disappears. That's what we spent 10 years building into the new MacBook Pro." },
     ],
+    emailSubjects: ['iPhone. Hello, again.', 'Mac. Built for what\'s next.', 'The new iPad. Impossibly thin.'],
+    emailOpener: 'Some things you have to see to believe. The new Apple Vision Pro is one of them.',
+    blogOpener: 'Most cameras record light. iPhone understands it.',
+    adHeadlines: ['Think different.', 'Shot on iPhone.', 'The new MacBook.', 'Hello, iPhone.'],
     antiPatterns: [
-      'Never use exclamation points.',
-      'Never say "innovative" or "revolutionary" — show, don\'t label.',
-      'Never list more than 3 features.',
-      'Never use passive voice.',
+      { rule: 'Never use exclamation points', reason: "Apple doesn't exclaim." },
+      { rule: '"Innovative," "revolutionary," or "game-changing"', reason: "Show, don't label." },
+      { rule: 'Never list more than 3 features', reason: 'Cut features, not words.' },
+      { rule: 'Never write in passive voice', reason: '"Apple built" not "was built by Apple."' },
+      { rule: 'Never anthropomorphize the product excessively', reason: "It's a tool, not a friend." },
     ],
-    imageStyle: 'Ultra-minimal, product-centric, cinematic depth of field. Near-white or deep-space backgrounds. One key light, no harsh shadows.',
-    keywords: ['Restraint', 'Precision', 'Audacity', 'Clarity', 'Taste'],
-    bg: '#f5f5f7',
-    accent: '#0066cc',
+    imageRules: {
+      always: ['Ultra-minimal, product-centric', 'Cinematic depth of field', 'One key light, no harsh shadows', 'Near-white or deep-black backgrounds'],
+      never: ['Gradients or lens flare', 'Stock-photo aesthetics', 'Busy environments or props', 'Humans unless using the product'],
+    },
+    bg: '#ffffff', fg: '#1d1d1f', accent: '#0066cc', accentAlt: '#1d1d1f',
+    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   stripe: {
-    name: 'Stripe',
-    domain: 'stripe.com',
-    tagline: 'Infrastructure that thinks.',
-    about: 'Stripe writes like a brilliant engineer who is also an exceptional communicator. Technical and precise, but never cold. It treats developers as intellectuals.',
+    name: 'Stripe', domain: 'stripe.com',
+    principle: 'Own the complexity',
+    voice: 'Technical precision with human warmth.',
+    target: 'Ambitious builders — developers and founders',
+    differentiator: 'Intellectual respect for technical problems',
+    positioning: "Stripe targets ambitious builders who are serious about great products. The differentiation is intellectual respect: Stripe is the only payments company that treats technical complexity as interesting, not something to hide.",
     colors: [
-      { hex: '#635bff', name: 'Stripe Purple' },
-      { hex: '#0a2540', name: 'Deep Navy' },
-      { hex: '#00d4ff', name: 'Electric Teal' },
-      { hex: '#f6f9fc', name: 'Fog' },
+      { hex: '#635bff', name: 'Stripe Purple', desc: "The brand's most distinctive element" },
+      { hex: '#0a2540', name: 'Deep Navy', desc: 'Headlines and dark backgrounds' },
+      { hex: '#00d4ff', name: 'Electric Teal', desc: 'Highlights and data viz' },
+      { hex: '#f6f9fc', name: 'Fog', desc: "Page backgrounds — the brand's 'clean' feel" },
+      { hex: '#32d583', name: 'Growth Green', desc: 'Positive states and growth indicators' },
     ],
-    fonts: [
-      { name: 'Sohne', role: 'Headlines' },
-      { name: 'Inter', role: 'Body' },
-      { name: 'JetBrains Mono', role: 'Code' },
-    ],
+    primaryFont: { name: 'Sohne', desc: 'Tight, confident, geometric. The brand\'s most visible typographic decision.' },
+    bodyFont: { name: 'Inter', size: '16px', desc: 'Technical clarity at all sizes. Code uses JetBrains Mono.' },
     voiceRules: [
-      { do: 'Respect the reader\'s intelligence with technical precision.', dont: 'Dumb down complexity.' },
-      { do: 'Lead with the outcome, earn the explanation.', dont: 'Open with process.' },
-      { do: 'Own the complexity. Don\'t hide it.', dont: 'Say "we handle everything for you."' },
+      { title: "Respect the reader's intelligence", good: 'Stripe uses machine learning to route transactions across acquiring banks based on real-time success rates.', bad: 'Stripe uses AI to make your payments work better.' },
+      { title: 'Lead with the outcome, earn the explanation', good: 'Increase revenue. Stripe Radar blocks fraud without blocking good customers.', bad: 'Stripe Radar is a fraud detection tool that uses machine learning algorithms.' },
+      { title: 'Technical precision over marketing vagueness', good: 'Webhooks deliver events within 200ms of state changes.', bad: 'Get notified instantly when things happen.' },
+      { title: "Own the complexity. Don't hide it.", good: "Reconciliation across 135 currencies is hard. Here's how we solved it.", bad: "We handle all the complexity so you don't have to worry about it." },
+      { title: 'Warmth is in the details, not the adjectives', good: "We built this so you don't have to.", bad: 'Our amazing team created this incredible feature!' },
     ],
-    templates: [
-      { platform: 'Twitter / X', example: 'Card-not-present fraud costs $32B/year. Stripe Radar uses 100B+ data points to stop it.' },
-      { platform: 'Email Subject', example: 'Increase checkout conversion by 11%: new Link data' },
-      { platform: 'Doc Opener', example: 'Handling webhooks reliably is harder than it sounds. Here\'s how Stripe makes it simple.' },
-      { platform: 'Ad Headline', example: 'Payments infrastructure for the internet.' },
+    socialPosts: [
+      { platform: 'X / Twitter', handle: '@stripe', copy: 'Card-not-present fraud costs merchants $32B/year. Stripe Radar uses 100B+ data points to stop it before it starts.' },
+      { platform: 'LinkedIn', handle: 'Stripe', copy: "We've processed more than $1T in payments. Here's what we learned about checkout conversion that most companies never figure out." },
+      { platform: 'Instagram', handle: '@stripe', copy: 'Every great internet business runs on payments infrastructure. We built the infrastructure.' },
     ],
+    emailSubjects: ['Increase checkout conversion by 11%: new Link data', "Radar's false positive rate just dropped 30%", 'New: instant payouts to 40+ countries'],
+    emailOpener: "Handling webhooks reliably is harder than it sounds. Stripe sends each event with a signature you can verify, so you never have to trust unverified data.",
+    blogOpener: "Most payment companies hide complexity. We think complexity is interesting — and that understanding it is how you build better products.",
+    adHeadlines: ['Payments infrastructure for the internet.', 'Increase revenue. Reduce fraud.', 'The platform companies use to get paid.'],
     antiPatterns: [
-      'Never use "seamless," "powerful," or "robust."',
-      'Never hide the complexity.',
-      'Never write CTAs without context.',
-      'Never use stock imagery of coins or credit cards.',
+      { rule: '"Seamless," "powerful," or "robust"', reason: "Stripe's most-blocked words internally." },
+      { rule: "Never hide the complexity", reason: "Developers trust brands that acknowledge hard problems." },
+      { rule: "Never use passive voice in technical writing", reason: "Own every action." },
+      { rule: 'Stock imagery of money, coins, or generic business people', reason: "Stripe's imagery is abstract and architectural." },
+      { rule: 'CTAs without context', reason: '"Get started" needs to answer "and then what?"' },
     ],
-    imageStyle: 'Abstract, mathematical, architectural. Purple-to-teal gradients on deep navy. "Infrastructure made beautiful."',
-    keywords: ['Precision', 'Trust', 'Intelligence', 'Scale', 'Craft'],
-    bg: '#0a2540',
-    accent: '#635bff',
+    imageRules: {
+      always: ['Abstract, mathematical, architectural forms', 'Purple-to-teal gradients on deep navy', 'Data visualization aesthetics', 'Infrastructure made beautiful'],
+      never: ['Photos of people handing over credit cards', 'Coins or generic fintech imagery', 'Anything that looks like a bank', 'Stock business photography'],
+    },
+    bg: '#0a2540', fg: '#ffffff', accent: '#635bff', accentAlt: '#00d4ff',
+    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   linear: {
-    name: 'Linear',
-    domain: 'linear.app',
-    tagline: 'Built for people who care about craft.',
-    about: 'Linear is opinionated and proud of it. The brand speaks directly to makers who are tired of bloated tools. No fluff — just speed and intention.',
+    name: 'Linear', domain: 'linear.app',
+    principle: 'Speed is a feature',
+    voice: 'Opinionated. Direct. Proud of it.',
+    target: 'Makers who are tired of bloated tools',
+    differentiator: 'Software that respects your time',
+    positioning: "Linear is opinionated and proud of it. The brand speaks directly to makers who are tired of bloated, slow, committee-designed tools. No fluff — just speed and intention.",
     colors: [
-      { hex: '#5e6ad2', name: 'Linear Blue' },
-      { hex: '#1e1e2e', name: 'Night' },
-      { hex: '#e8e8f0', name: 'Mist' },
-      { hex: '#f65866', name: 'Coral' },
+      { hex: '#5e6ad2', name: 'Linear Blue', desc: 'Primary brand color' },
+      { hex: '#1e1e2e', name: 'Night', desc: 'Primary background (dark mode first)' },
+      { hex: '#e8e8f0', name: 'Mist', desc: 'Light backgrounds and surfaces' },
+      { hex: '#f65866', name: 'Coral', desc: 'Errors, blockers, and urgency' },
+      { hex: '#ffffff', name: 'White', desc: 'Text on dark surfaces' },
     ],
-    fonts: [
-      { name: 'Inter', role: 'UI & Headlines' },
-      { name: 'IBM Plex Mono', role: 'Code & Accents' },
-    ],
+    primaryFont: { name: 'Inter', desc: 'Clean, legible, fast. No decorative choices — everything serves readability.' },
+    bodyFont: { name: 'IBM Plex Mono', size: '14px', desc: 'Used for code, issue IDs, and technical labels. Precision matters.' },
     voiceRules: [
-      { do: 'Be direct. Say exactly what the product does.', dont: 'Use vague positioning language.' },
-      { do: 'Acknowledge the competition without naming names.', dont: 'Play it safe with empty statements.' },
-      { do: 'Write for people who hate bad software.', dont: 'Speak to a generic "team."' },
+      { title: 'Be direct. Say what it does.', good: 'Linear syncs in real time. Everything is instant.', bad: 'Linear helps teams collaborate more effectively on their workflow.' },
+      { title: 'Acknowledge the frustration', good: 'Project management software is usually slow. Linear is not.', bad: "We're a great alternative to other project management tools." },
+      { title: 'Write for people who hate bad software', good: 'Built for teams who believe their tools should work as hard as they do.', bad: 'Perfect for teams of all sizes in any industry.' },
+      { title: 'Specific beats vague, always', good: 'Issues open in under 50ms. The interface responds before you finish thinking.', bad: 'Linear is incredibly fast and responsive.' },
+      { title: "Speed is moral. Treat it that way.", good: 'Slow software is disrespectful. Every millisecond we cut is time back to you.', bad: "We've optimized our performance to deliver a great experience." },
     ],
-    templates: [
-      { platform: 'Twitter / X', example: 'Issue tracking built for speed. Linear feels fast because it is.' },
-      { platform: 'Product Hunt', example: 'The issue tracker you\'ll actually enjoy using. Built for teams that care about craft.' },
-      { platform: 'Ad Headline', example: 'Software built for people who hate slow software.' },
-      { platform: 'Email Subject', example: 'Linear 3.0 — everything, faster.' },
+    socialPosts: [
+      { platform: 'X / Twitter', handle: '@linear', copy: 'Issue tracking built for speed. Linear feels fast because it is.\n\nSub-50ms response times. Everything local-first.' },
+      { platform: 'X / Twitter', handle: '@linear', copy: "We spent 6 months cutting 200ms from our load time. Because we think software should respect your attention." },
+      { platform: 'LinkedIn', handle: 'Linear', copy: "Most project management tools are designed by committee. Linear is designed by people who were frustrated by those tools." },
     ],
+    emailSubjects: ['Linear 3.0 — everything, faster.', 'New: cycles that actually work', 'Your roadmap, finally under control'],
+    emailOpener: "We built Linear because we were frustrated. Every tool we used was slow, bloated, and clearly designed to impress executives in a demo — not help engineers ship faster.",
+    blogOpener: "Speed is not a feature. Speed is respect.",
+    adHeadlines: ['Software built for people who hate slow software.', 'The issue tracker you\'ll actually enjoy using.', 'Ship faster. No exceptions.'],
     antiPatterns: [
-      'Never say "productivity" as a standalone promise.',
-      'Never use passive voice.',
-      'Never add emoji to serious product copy.',
-      'Never speak to "enterprises" — speak to builders.',
+      { rule: '"Productivity" as a standalone promise', reason: "Everyone says this. It means nothing." },
+      { rule: 'Emoji in serious product copy', reason: "Linear is not playful — it's intentional." },
+      { rule: 'Speak to "enterprises" or "all team sizes"', reason: "Linear speaks to builders, not buyers." },
+      { rule: 'Vague performance claims', reason: "If you can't measure it, don't claim it." },
+      { rule: 'Passive voice', reason: "Linear acts. Always." },
     ],
-    imageStyle: 'Dark mode UI screenshots, tight grids, monochrome with a single accent pop. Minimal chrome, maximum content.',
-    keywords: ['Speed', 'Craft', 'Opinions', 'Focus', 'Makers'],
-    bg: '#1e1e2e',
-    accent: '#5e6ad2',
+    imageRules: {
+      always: ['Dark mode UI screenshots', 'Tight grid layouts', 'Monochrome with single accent pop', 'Maximum content, minimum chrome'],
+      never: ['Light mode anything', 'Stock photos of teams in meetings', 'Charts that look like PowerPoint', 'Anything soft or rounded'],
+    },
+    bg: '#1e1e2e', fg: '#ffffff', accent: '#5e6ad2', accentAlt: '#f65866',
+    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   notion: {
-    name: 'Notion',
-    domain: 'notion.so',
-    tagline: 'One tool. Infinite shape.',
-    about: 'Notion speaks in calm, confident universality. It\'s for everyone and proud of it — from students to Fortune 500 teams. The voice is warm and unhurried.',
+    name: 'Notion', domain: 'notion.so',
+    principle: "One tool. Infinite shape.",
+    voice: 'Warm. Calm. Universal.',
+    target: 'Everyone from students to Fortune 500 teams',
+    differentiator: 'A single tool that adapts to how you think',
+    positioning: "Notion speaks in calm, confident universality. It's for everyone — from students to Fortune 500 teams. The voice is warm, unhurried, and always personal.",
     colors: [
-      { hex: '#000000', name: 'Notion Black' },
-      { hex: '#ffffff', name: 'Pure White' },
-      { hex: '#37352f', name: 'Warm Dark' },
-      { hex: '#e9e9e7', name: 'Parchment' },
+      { hex: '#000000', name: 'Notion Black', desc: 'Primary text and key UI' },
+      { hex: '#ffffff', name: 'Pure White', desc: 'Primary background' },
+      { hex: '#37352f', name: 'Warm Dark', desc: 'Body text and secondary UI' },
+      { hex: '#e9e9e7', name: 'Parchment', desc: 'Subtle backgrounds and dividers' },
+      { hex: '#2eaadc', name: 'Notion Blue', desc: 'Links and interactive elements' },
     ],
-    fonts: [
-      { name: 'ui-sans-serif', role: 'UI & Headlines' },
-      { name: 'Georgia', role: 'Long-form Body' },
-    ],
+    primaryFont: { name: 'ui-sans-serif / Inter', desc: 'Clean and approachable. Notion never intimidates with its typography.' },
+    bodyFont: { name: 'Georgia (editorial)', size: '16px', desc: 'Used for long-form pages — warm, readable, timeless.' },
     voiceRules: [
-      { do: 'Speak to the use case, not the feature.', dont: 'Lead with technical capability.' },
-      { do: 'Make complexity feel approachable.', dont: 'Overwhelm with options.' },
-      { do: 'Use "you" a lot — it\'s always personal.', dont: 'Write in corporate third person.' },
+      { title: 'Speak to the use case, not the feature', good: "Plan your sprint, your wedding, or your novel — all in the same tool.", bad: 'Notion offers databases, docs, wikis, and project management in one place.' },
+      { title: "Make complexity feel approachable", good: "Start with a blank page. Build from there. It grows with you.", bad: "Notion is a powerful workspace with relational databases, linked views, and API integrations." },
+      { title: "Always use 'you'", good: "Build the system that works for your brain. Not someone else's.", bad: "Users can customize their workspace to fit their workflow." },
+      { title: 'Calm confidence, never hype', good: "Everything you need, in one place. Take your time.", bad: "GAME-CHANGING workspace tool that will TRANSFORM your productivity!" },
+      { title: 'Invite. Never pressure.', good: "Start for free. Stay because it works.", bad: "Don't miss out — upgrade today before prices change." },
     ],
-    templates: [
-      { platform: 'Twitter / X', example: 'Your wiki. Your docs. Your projects. One tool that adapts to how you think.' },
-      { platform: 'Instagram', example: 'Build the system that works for your brain. Not someone else\'s.' },
-      { platform: 'Ad Headline', example: 'Your all-in-one workspace.' },
-      { platform: 'Email Subject', example: 'A new way to organize everything.' },
+    socialPosts: [
+      { platform: 'X / Twitter', handle: '@NotionHQ', copy: 'Your wiki. Your docs. Your projects. One tool that adapts to how you think.' },
+      { platform: 'Instagram', handle: '@notionhq', copy: "Build the system that works for your brain.\n\nNot someone else's.\n\nStart free →" },
+      { platform: 'LinkedIn', handle: 'Notion', copy: "The best teams we know share one trait: they have a single source of truth. Here's how to build yours." },
     ],
+    emailSubjects: ['A new way to organize everything.', 'Your team\'s new home base.', 'The blank page that becomes everything.'],
+    emailOpener: "We think every team deserves a place where everything lives — docs, tasks, wikis, and databases — all connected, all searchable, all yours.",
+    blogOpener: "The problem with most productivity tools is that they try to change how you think. Notion does the opposite.",
+    adHeadlines: ['Your all-in-one workspace.', 'Write. Plan. Organize. Together.', 'One tool. Everything in it.'],
     antiPatterns: [
-      'Never feel rushed or urgent — Notion is calm.',
-      'Never exclude beginners.',
-      'Never use jargon without immediately explaining it.',
-      'Never talk about competitors.',
+      { rule: 'Urgency or scarcity language', reason: "Notion is calm. It doesn't rush you." },
+      { rule: 'Excluding beginners', reason: "Notion is for everyone. Always." },
+      { rule: 'Jargon without explanation', reason: '"Relational database" needs a plain-English follow-up.' },
+      { rule: 'Talking about competitors', reason: "Notion competes with no one. It's its own category." },
+      { rule: 'Passive voice or corporate speak', reason: "Notion talks to people, not organizations." },
     ],
-    imageStyle: 'Clean white canvases with structured content. Real-looking pages, warm serif typography, soft natural light photography.',
-    keywords: ['Calm', 'Universal', 'Flexible', 'Warm', 'Organized'],
-    bg: '#ffffff',
-    accent: '#000000',
+    imageRules: {
+      always: ['Clean white canvases with real content', 'Warm serif typography in editorial shots', 'Soft natural light photography', 'Real use cases — actual pages, not mockups'],
+      never: ['Dark mode (Notion is light-first)', 'Abstract or conceptual imagery', 'Stock photos of people at laptops', 'Cluttered or overwhelming layouts'],
+    },
+    bg: '#ffffff', fg: '#1a1a1a', accent: '#000000', accentAlt: '#2eaadc',
+    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   figma: {
-    name: 'Figma',
-    domain: 'figma.com',
-    tagline: 'Design is a team sport.',
-    about: 'Figma\'s voice is energetic, inclusive, and community-driven. It celebrates the messy reality of creative collaboration and isn\'t afraid to be playful.',
+    name: 'Figma', domain: 'figma.com',
+    principle: 'Design is a team sport',
+    voice: 'Energetic. Inclusive. Community-driven.',
+    target: 'Design teams and the developers who work with them',
+    differentiator: 'Real-time collaboration as the core feature',
+    positioning: "Figma's voice is energetic, inclusive, and community-driven. It celebrates the messy reality of creative collaboration and isn't afraid to be playful or direct.",
     colors: [
-      { hex: '#f24e1e', name: 'Figma Red' },
-      { hex: '#ff7262', name: 'Coral' },
-      { hex: '#a259ff', name: 'Purple' },
-      { hex: '#1abcfe', name: 'Sky' },
+      { hex: '#f24e1e', name: 'Figma Red', desc: 'Primary brand color' },
+      { hex: '#ff7262', name: 'Coral', desc: 'Warm accent and hover states' },
+      { hex: '#a259ff', name: 'Purple', desc: 'Secondary brand color' },
+      { hex: '#1abcfe', name: 'Sky', desc: 'Interactive elements' },
+      { hex: '#0acf83', name: 'Figma Green', desc: 'Success states and CTAs' },
     ],
-    fonts: [
-      { name: 'Inter', role: 'UI & Headlines' },
-      { name: 'DM Sans', role: 'Marketing Body' },
-    ],
+    primaryFont: { name: 'Inter', desc: 'Universal, legible, and community-beloved. Fits the collaborative spirit perfectly.' },
+    bodyFont: { name: 'DM Sans', size: '16px', desc: 'Warm and approachable for marketing copy. Friendly without being cutesy.' },
     voiceRules: [
-      { do: 'Celebrate the collaborative process, not just the output.', dont: 'Focus only on the solo designer.' },
-      { do: 'Be playful when the moment allows.', dont: 'Be serious and stiff.' },
-      { do: 'Highlight community and co-creation.', dont: 'Position design as exclusive.' },
+      { title: 'Celebrate the process, not just the output', good: "Great design happens in the comments, the handoffs, and the 11pm Slack messages.", bad: 'Create stunning designs with Figma\'s professional design tools.' },
+      { title: 'Be playful when the moment allows', good: "Your design is one shared link away from becoming everyone's problem. In a good way.", bad: 'Figma makes it easy to share your designs with stakeholders for review.' },
+      { title: 'Design is for everyone', good: "Designers, developers, product managers — everyone has a seat at the table.", bad: 'Professional design software for UI/UX designers.' },
+      { title: 'Show the mess, not just the finish', good: "Figma is where your best work starts ugly. That's the point.", bad: 'Create pixel-perfect designs from the very first frame.' },
+      { title: 'Community first', good: "Built by designers, improved by millions of them. The plugin ecosystem is all community.", bad: 'Figma offers an extensive library of plugins for enhanced functionality.' },
     ],
-    templates: [
-      { platform: 'Twitter / X', example: 'Design together, ship faster. Figma brings your whole team into the creative process.' },
-      { platform: 'Instagram', example: 'Great design happens in the comments, the handoffs, and the 11pm Slack messages. Build it together.' },
-      { platform: 'Ad Headline', example: 'Where great design happens. Together.' },
-      { platform: 'Email Subject', example: 'Design, together — Figma\'s new collaboration features' },
+    socialPosts: [
+      { platform: 'X / Twitter', handle: '@figma', copy: 'Design together, ship faster. Figma brings your whole team into the creative process — not just the designers.' },
+      { platform: 'Instagram', handle: '@figma', copy: "Great design happens in the comments, the handoffs, and the 11pm Slack messages.\n\nBuild it together." },
+      { platform: 'LinkedIn', handle: 'Figma', copy: "The gap between design and development costs companies billions. Here's how teams are closing it." },
     ],
+    emailSubjects: ['Design, together — new collaboration features', 'Your handoffs just got a lot easier.', 'Community spotlight: 1M+ plugins installed this week'],
+    emailOpener: "Every great product starts with a conversation. Figma is where that conversation becomes a design.",
+    blogOpener: "The best design decisions aren't made by one person. They're made in the comment thread at 2pm on a Tuesday.",
+    adHeadlines: ['Where great design happens. Together.', 'Design. Collaborate. Ship.', 'One file. Whole team.'],
     antiPatterns: [
-      'Never make design feel exclusive or elite.',
-      'Never ignore the engineering side of the product.',
-      'Never be formal — Figma is approachable.',
-      'Never use "pixel-perfect" as a value proposition.',
+      { rule: 'Making design feel exclusive or elite', reason: "Figma is for everyone who touches a product." },
+      { rule: '"Pixel-perfect" as a value proposition', reason: "Figma is about collaboration, not perfectionism." },
+      { rule: 'Being formal or stiff', reason: "Figma is approachable. Always." },
+      { rule: 'Ignoring the developer audience', reason: "Dev Mode exists. Engineers are users too." },
+      { rule: 'Solo-designer framing', reason: "The whole point is the team." },
     ],
-    imageStyle: 'Vibrant, multi-colored, community-made. Real design files, diverse contributors, colorful components. Energy over polish.',
-    keywords: ['Collaboration', 'Community', 'Creativity', 'Inclusive', 'Energy'],
-    bg: '#ffffff',
-    accent: '#a259ff',
+    imageRules: {
+      always: ['Real design files with actual content', 'Diverse teams collaborating visibly', 'Colorful, multi-layered component views', 'Community-made content and plugins'],
+      never: ['Solo designer in isolation', 'Corporate or sterile environments', 'Overly polished mockups that hide the process', 'Monochrome — Figma loves color'],
+    },
+    bg: '#ffffff', fg: '#1a1a1a', accent: '#a259ff', accentAlt: '#f24e1e',
+    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   vercel: {
-    name: 'Vercel',
-    domain: 'vercel.com',
-    tagline: 'Ship. Fast.',
-    about: 'Vercel speaks to developers who value speed and experience above all. The voice is terse, confident, and obsessed with performance metrics.',
+    name: 'Vercel', domain: 'vercel.com',
+    principle: 'Ship. Fast.',
+    voice: 'Terse. Confident. Developer-first.',
+    target: 'Frontend developers and engineering teams',
+    differentiator: 'The fastest developer experience from code to production',
+    positioning: "Vercel speaks to developers who value speed and experience above all. The voice is terse, confident, and obsessed with performance metrics. Every word is load-bearing.",
     colors: [
-      { hex: '#000000', name: 'Vercel Black' },
-      { hex: '#ffffff', name: 'Pure White' },
-      { hex: '#0070f3', name: 'Vercel Blue' },
-      { hex: '#888888', name: 'Mid Gray' },
+      { hex: '#000000', name: 'Vercel Black', desc: 'Primary brand color and backgrounds' },
+      { hex: '#ffffff', name: 'Pure White', desc: 'Text on dark, primary backgrounds on light' },
+      { hex: '#0070f3', name: 'Vercel Blue', desc: 'Interactive elements and CTAs' },
+      { hex: '#888888', name: 'Mid Gray', desc: 'Secondary text and subtle UI' },
+      { hex: '#ff0080', name: 'Pink', desc: 'Gradients and highlights in brand creative' },
     ],
-    fonts: [
-      { name: 'Geist', role: 'All UI & Headlines' },
-      { name: 'Geist Mono', role: 'Code' },
-    ],
+    primaryFont: { name: 'Geist', desc: 'Designed by Vercel. Clean, modern, and technical. Purpose-built for developer UIs.' },
+    bodyFont: { name: 'Geist Mono', size: '14px', desc: 'Used for code, paths, and technical labels. The brand lives in monospace.' },
     voiceRules: [
-      { do: 'Lead with speed metrics and concrete outcomes.', dont: 'Use vague performance claims.' },
-      { do: 'Short sentences. One point per line.', dont: 'Write long explanatory paragraphs.' },
-      { do: 'Talk to the developer, not the manager.', dont: 'Use enterprise procurement language.' },
+      { title: 'Lead with speed metrics', good: 'Deploy globally in 35 seconds. No config.', bad: "Vercel makes it easy and fast to deploy your applications anywhere in the world." },
+      { title: 'Short sentences. Period.', good: 'Zero config. Infinite scale. Ship today.', bad: 'With Vercel, you can deploy your frontend applications quickly and easily without needing to configure anything.' },
+      { title: 'Talk to the developer, not the manager', good: 'npx create-next-app@latest. That\'s it. You\'re live.', bad: 'Vercel enables engineering teams to increase deployment velocity.' },
+      { title: 'Concrete over vague', good: '40ms global response time. 99.99% uptime. Real numbers.', bad: "Blazing fast performance you can count on." },
+      { title: 'The product speaks. You amplify.', good: 'Zero config. Maximum performance.', bad: "We're proud to offer an industry-leading developer experience." },
     ],
-    templates: [
-      { platform: 'Twitter / X', example: 'Deploy in seconds. Scale to millions. Zero config.' },
-      { platform: 'Ad Headline', example: 'The frontend cloud. Ship faster.' },
-      { platform: 'Email Subject', example: 'Your site is 3x faster. Here\'s what changed.' },
-      { platform: 'Product Announcement', example: 'Vercel v0. AI that generates UI from a prompt. Ship it today.' },
+    socialPosts: [
+      { platform: 'X / Twitter', handle: '@vercel', copy: 'Deploy in seconds. Scale to millions. Zero config.\n\nThat\'s Vercel.' },
+      { platform: 'X / Twitter', handle: '@vercel', copy: 'v0. Type a prompt. Get a UI. Ship it.\n\nTry it now →' },
+      { platform: 'LinkedIn', handle: 'Vercel', copy: 'Frontend teams using Vercel ship 3x faster than teams managing their own infrastructure. Here\'s the data.' },
     ],
+    emailSubjects: ['Your site is 3x faster. Here\'s what changed.', 'New: Edge Functions now in 100+ regions', 'Deploy in 1 click. Seriously.'],
+    emailOpener: "Your last deployment took 4 minutes. We just made that 23 seconds. Here's what changed.",
+    blogOpener: "Speed is not a feature you add later. It's a decision you make on day one.",
+    adHeadlines: ['The frontend cloud. Ship faster.', 'Deploy. Scale. Repeat.', 'From localhost to global in seconds.'],
     antiPatterns: [
-      'Never use more words than necessary.',
-      'Never bury the speed metric.',
-      'Never speak to non-technical buyers first.',
-      'Never use warm or friendly language in technical docs.',
+      { rule: 'More words than necessary', reason: "Vercel writes like it deploys: fast." },
+      { rule: 'Burying the performance metric', reason: "Lead with speed. Always." },
+      { rule: 'Speaking to non-technical buyers first', reason: "Developers decide. Managers follow." },
+      { rule: '"Easy" without proof', reason: "Show the command, not the adjective." },
+      { rule: 'Warm or casual language in technical docs', reason: "Docs are precise. Marketing can have personality." },
     ],
-    imageStyle: 'Stark black and white. Terminal screenshots. Speed graphs. Minimal chrome. The aesthetic is "night mode everything."',
-    keywords: ['Speed', 'Performance', 'Minimalism', 'Developer-first', 'Deploy'],
-    bg: '#000000',
-    accent: '#0070f3',
+    imageRules: {
+      always: ['Stark black and white aesthetic', 'Terminal and code screenshots', 'Performance graphs with real numbers', 'Dark mode everything'],
+      never: ['Light mode UI shots', 'Stock photos of people', 'Generic cloud imagery', 'Anything that looks like a SaaS dashboard from 2018'],
+    },
+    bg: '#000000', fg: '#ffffff', accent: '#0070f3', accentAlt: '#ffffff',
+    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   framer: {
-    name: 'Framer',
-    domain: 'framer.com',
-    tagline: 'Websites that move.',
-    about: 'Framer is bold, motion-first, and aimed at designers who want to build. The voice has an edge — it knows its audience is creative and ambitious.',
+    name: 'Framer', domain: 'framer.com',
+    principle: 'Motion is the message',
+    voice: 'Bold. Creative. Unapologetically ambitious.',
+    target: 'Designers who want to build, builders who care about design',
+    differentiator: 'The only website builder where motion is native',
+    positioning: "Framer is bold, motion-first, and aimed at designers who want to build. The voice has an edge — it knows its audience is creative and ambitious, and it refuses to talk down to them.",
     colors: [
-      { hex: '#0055ff', name: 'Framer Blue' },
-      { hex: '#141414', name: 'Near Black' },
-      { hex: '#ff4488', name: 'Electric Pink' },
-      { hex: '#ffffff', name: 'White' },
+      { hex: '#0055ff', name: 'Framer Blue', desc: 'Primary brand color' },
+      { hex: '#141414', name: 'Near Black', desc: 'Primary background (dark-first brand)' },
+      { hex: '#ff4488', name: 'Electric Pink', desc: 'Gradient partner and accent' },
+      { hex: '#ffffff', name: 'White', desc: 'Text and light surfaces' },
+      { hex: '#7b61ff', name: 'Violet', desc: 'Gradient midpoint and UI accents' },
     ],
-    fonts: [
-      { name: 'Inter', role: 'UI & Headlines' },
-      { name: 'Framer Custom', role: 'Brand Display' },
-    ],
+    primaryFont: { name: 'Inter', desc: 'Clean and modern. Framer lets the product speak — the typography stays out of the way.' },
+    bodyFont: { name: 'Framer Display (custom)', size: '18px', desc: 'Used in hero moments and feature callouts. Bold and unmistakable.' },
     voiceRules: [
-      { do: 'Lead with motion and interactivity as the differentiator.', dont: 'Describe Framer as a "website builder."' },
-      { do: 'Be bold. Make strong claims.', dont: 'Hedge or qualify everything.' },
-      { do: 'Speak to the design-to-code ambition.', dont: 'Ignore the technical sophistication.' },
+      { title: 'Lead with motion as the differentiator', good: "It's not a website. It's a website that moves.", bad: 'Build beautiful websites with Framer\'s intuitive drag-and-drop interface.' },
+      { title: 'Make bold claims. Own them.', good: 'Framer is the fastest way to build websites that feel alive.', bad: "Framer might be a good option if you're looking for a flexible website builder." },
+      { title: 'The audience is creative. Match their energy.', good: 'Your portfolio is the first impression. Make it move.', bad: 'Framer helps you create a professional online portfolio website.' },
+      { title: "Don't explain. Show.", good: 'See it. Build it. Ship it. Today.', bad: 'Framer allows you to design and publish websites with built-in animation capabilities.' },
+      { title: 'Position against the category, not just competitors', good: 'Not a website builder. A creative tool that happens to publish to the web.', bad: "Framer is similar to other website builders but with more design features." },
     ],
-    templates: [
-      { platform: 'Twitter / X', example: 'Build websites that actually move. No code. No limits. Just Framer.' },
-      { platform: 'Instagram', example: 'Your portfolio deserves more than a template. Make it move.' },
-      { platform: 'Ad Headline', example: 'Design. Animate. Publish. Today.' },
-      { platform: 'Email Subject', example: 'Your next site has motion built in.' },
+    socialPosts: [
+      { platform: 'X / Twitter', handle: '@framer', copy: 'Build websites that actually move. No code. No limits. No compromises.\n\nJust Framer.' },
+      { platform: 'Instagram', handle: '@framer', copy: "Your portfolio deserves more than a template.\n\nMake it move." },
+      { platform: 'LinkedIn', handle: 'Framer', copy: "Design and development used to be two separate jobs. Framer makes it one." },
     ],
+    emailSubjects: ['Your next site has motion built in.', 'New: Spring physics for everything.', 'Publish in seconds. Stand out forever.'],
+    emailOpener: "Static websites are forgettable. Framer websites are not. Here's why motion changes everything.",
+    blogOpener: "The web stopped moving somewhere around 2015. Flat design, static pages, templates that all look the same. We built Framer to fix that.",
+    adHeadlines: ['Design. Animate. Publish. Today.', 'The website builder that moves.', 'No code. All motion.'],
     antiPatterns: [
-      'Never undersell the animation capabilities.',
-      'Never position as a simple drag-and-drop builder.',
-      'Never be modest about what it can do.',
-      'Never ignore the design-forward audience.',
+      { rule: '"Website builder" as positioning', reason: "That's a category. Framer is a creative tool." },
+      { rule: 'Being modest about capabilities', reason: "Framer is genuinely powerful. Own it." },
+      { rule: 'Ignoring the design-forward audience', reason: "Framer users are designers first." },
+      { rule: 'Describing motion as an "add-on"', reason: "Motion is native. It's the whole point." },
+      { rule: 'Apologizing for complexity', reason: "Framer users want power. Give it to them." },
     ],
-    imageStyle: 'Dynamic, motion-blurred UI, vibrant gradients from blue to pink. Feels like the product itself is in motion.',
-    keywords: ['Motion', 'Bold', 'Ambitious', 'Creative', 'Interactive'],
-    bg: '#141414',
-    accent: '#0055ff',
+    imageRules: {
+      always: ['Dynamic, motion-blurred UI moments', 'Blue-to-pink gradient aesthetic', 'Dark backgrounds with glowing elements', 'The product in motion — never static'],
+      never: ['Static screenshots', 'Light backgrounds', 'Template galleries', 'Anything that looks like a normal website builder'],
+    },
+    bg: '#141414', fg: '#ffffff', accent: '#0055ff', accentAlt: '#ff4488',
+    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   loom: {
-    name: 'Loom',
-    domain: 'loom.com',
-    tagline: 'Say it once. Say it well.',
-    about: 'Loom is warm, human, and async-native. The brand celebrates the fact that not everything needs a meeting — and makes that feel like a gift.',
+    name: 'Loom', domain: 'loom.com',
+    principle: 'Say it once. Say it well.',
+    voice: 'Warm. Human. Async-native.',
+    target: 'Remote teams who communicate too much and too poorly',
+    differentiator: 'Async video that feels personal, not corporate',
+    positioning: "Loom is warm, human, and async-native. The brand celebrates the fact that not everything needs a meeting — and makes that feel like a gift, not a compromise or a lesser option.",
     colors: [
-      { hex: '#625df5', name: 'Loom Purple' },
-      { hex: '#f8f8f8', name: 'Off White' },
-      { hex: '#1a1a1a', name: 'Deep Black' },
-      { hex: '#ff9500', name: 'Amber' },
+      { hex: '#625df5', name: 'Loom Purple', desc: 'Primary brand color' },
+      { hex: '#f8f8f8', name: 'Off White', desc: 'Primary background' },
+      { hex: '#1a1a1a', name: 'Deep Black', desc: 'Primary text' },
+      { hex: '#ff9500', name: 'Amber', desc: 'Recording indicator and warmth accents' },
+      { hex: '#e5e5f0', name: 'Lavender Gray', desc: 'Subtle backgrounds and cards' },
     ],
-    fonts: [
-      { name: 'Graphik', role: 'Headlines' },
-      { name: 'Inter', role: 'Body' },
-    ],
+    primaryFont: { name: 'Graphik', desc: 'Warm and approachable. Never corporate. The typography feels like a person, not a brand.' },
+    bodyFont: { name: 'Inter', size: '16px', desc: 'Clean and readable at all sizes. The message matters more than the font.' },
     voiceRules: [
-      { do: 'Position async as a feature, not a workaround.', dont: 'Make it sound like a meeting replacement.' },
-      { do: 'Be warm and human — show the face behind the message.', dont: 'Sound cold or transactional.' },
-      { do: 'Celebrate the time saved.', dont: 'Focus on the technology.' },
+      { title: 'Async is better, not lesser', good: "That meeting could have been a Loom. Your team will thank you.", bad: "Can't make the meeting? Loom is a great alternative to video calls." },
+      { title: 'Show the face behind the message', good: "When you see someone's face, you understand them. Loom brings that to async.", bad: "Record your screen and webcam to communicate your message effectively." },
+      { title: 'Celebrate the time saved, not the tool', good: "Your team gets 45 minutes back. Every. Single. Day.", bad: "Loom is a fast and efficient way to record and share video messages." },
+      { title: 'Human warmth in every line', good: "Hit record. Say what you mean. Send it. Done.", bad: "Leverage Loom's video messaging capabilities to enhance asynchronous communication." },
+      { title: "Position time as the most precious resource", good: "Meetings are expensive. A Loom is free.", bad: "Save time by recording videos instead of scheduling meetings." },
     ],
-    templates: [
-      { platform: 'Twitter / X', example: 'That 45-minute meeting? It\'s a 3-minute Loom now. Your team will thank you.' },
-      { platform: 'Instagram', example: 'Show your face. Share your thinking. Skip the calendar invite.' },
-      { platform: 'Ad Headline', example: 'Say more in less time. Record with Loom.' },
-      { platform: 'Email Subject', example: 'I recorded this instead of scheduling a meeting.' },
+    socialPosts: [
+      { platform: 'X / Twitter', handle: '@loom', copy: "That 45-minute meeting? It's a 3-minute Loom now.\n\nYour team's calendar just exhaled." },
+      { platform: 'Instagram', handle: '@loom', copy: "Show your face.\nShare your thinking.\nSkip the calendar invite.\n\nHit record." },
+      { platform: 'LinkedIn', handle: 'Loom', copy: "The average knowledge worker attends 62 meetings per month. 71% of those are considered unproductive. We built Loom to fix that." },
     ],
+    emailSubjects: ['I recorded this instead of scheduling a meeting.', 'Your team just got 4 hours back this week.', 'The meeting that became a Loom.'],
+    emailOpener: "We built Loom because we believed that seeing someone's face — even async — changes how you understand them. We were right.",
+    blogOpener: "The calendar is lying to you. Those 6 hours of meetings this week? Most of them didn't need to happen.",
+    adHeadlines: ['Say more in less time. Record with Loom.', 'That meeting could have been a Loom.', 'Async that actually feels human.'],
     antiPatterns: [
-      'Never make async feel like a lesser substitute for real communication.',
-      'Never ignore the human warmth angle.',
-      'Never lead with features over the feeling.',
-      'Never use corporate jargon.',
+      { rule: 'Making async feel like a compromise', reason: "Loom positions async as superior, not secondary." },
+      { rule: 'Corporate or impersonal language', reason: "Loom is warm. It's about human connection." },
+      { rule: 'Leading with features', reason: "Lead with the feeling — time saved, connection made." },
+      { rule: '"Screen recording" as the positioning', reason: "Loom is communication, not a recording tool." },
+      { rule: 'Implying meetings are always necessary', reason: "Loom questions the meeting. Always." },
     ],
-    imageStyle: 'Real people at real computers. Warm ambient lighting. Genuine expressions. The recorder bubble is always visible.',
-    keywords: ['Human', 'Async', 'Warm', 'Efficient', 'Genuine'],
-    bg: '#f8f8f8',
-    accent: '#625df5',
+    imageRules: {
+      always: ['Real people at real computers', 'Warm ambient lighting', 'The recorder bubble always visible', 'Genuine, unposed expressions'],
+      never: ['Fake-looking stock photos', 'Corporate conference rooms', 'Screens without the Loom UI', 'Cold or sterile environments'],
+    },
+    bg: '#f8f8f8', fg: '#1a1a1a', accent: '#625df5', accentAlt: '#ff9500',
+    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   webflow: {
-    name: 'Webflow',
-    domain: 'webflow.com',
-    tagline: 'Build without limits. Design without compromise.',
-    about: 'Webflow speaks to designers who refuse to choose between creativity and control. The brand is empowering, technical, and deeply proud of what it enables.',
+    name: 'Webflow', domain: 'webflow.com',
+    principle: 'Build without limits',
+    voice: 'Empowering. Technical. Proudly capable.',
+    target: 'Designers who refuse to compromise on power or creativity',
+    differentiator: 'Professional website building without sacrificing design control',
+    positioning: "Webflow speaks to designers who refuse to choose between creativity and control. The brand is empowering, technical, and deeply proud of what it enables — and not shy about comparing itself to hiring a developer.",
     colors: [
-      { hex: '#4353ff', name: 'Webflow Blue' },
-      { hex: '#1a1a2e', name: 'Deep Ink' },
-      { hex: '#ffffff', name: 'White' },
-      { hex: '#146ef5', name: 'Electric Blue' },
+      { hex: '#4353ff', name: 'Webflow Blue', desc: 'Primary brand color' },
+      { hex: '#1a1a2e', name: 'Deep Ink', desc: 'Dark backgrounds and hero sections' },
+      { hex: '#ffffff', name: 'White', desc: 'Primary background (light pages)' },
+      { hex: '#146ef5', name: 'Electric Blue', desc: 'CTA and interactive element accent' },
+      { hex: '#f0f0ff', name: 'Frost', desc: 'Subtle backgrounds on light pages' },
     ],
-    fonts: [
-      { name: 'Gilroy', role: 'Headlines' },
-      { name: 'Inter', role: 'Body' },
-    ],
+    primaryFont: { name: 'Gilroy', desc: 'Bold and geometric. Conveys the power and confidence of the product itself.' },
+    bodyFont: { name: 'Inter', size: '16px', desc: 'Clear and functional. Lets the product capabilities speak for themselves.' },
     voiceRules: [
-      { do: 'Speak to the frustration of creative limitation.', dont: 'Ignore the pain of needing a developer.' },
-      { do: 'Celebrate visual power with technical depth.', dont: 'Oversimplify what the product does.' },
-      { do: 'Use "you" and speak directly to the designer.', dont: 'Be vague about who the product is for.' },
+      { title: 'Speak to the frustration of creative limitation', good: "You've been waiting for a developer. Webflow is the developer.", bad: "Webflow offers powerful tools for building professional websites." },
+      { title: 'Celebrate visual power with technical depth', good: "Every interaction, animation, and breakpoint — exactly how you designed it. In the browser.", bad: "Design beautiful, responsive websites with Webflow's intuitive interface." },
+      { title: "Don't simplify. Sophisticate.", good: "From grid to flexbox to custom CSS — all visual, all yours, all in the browser.", bad: "No coding required. Just drag and drop." },
+      { title: "Position vs. the 'need a developer' narrative", good: "Fire your developer. (Just kidding. But kind of not.)", bad: "Webflow makes it easy to build websites without knowing how to code." },
+      { title: 'The designer is the expert. Treat them as such.', good: "You already know how it should look. Webflow makes sure it does.", bad: "Even beginners can create stunning websites with Webflow!" },
     ],
-    templates: [
-      { platform: 'Twitter / X', example: 'You\'ve been waiting for a developer. Webflow is the developer.' },
-      { platform: 'Ad Headline', example: 'Build professional websites. Without writing code.' },
-      { platform: 'Email Subject', example: 'You don\'t need a developer for this.' },
-      { platform: 'Instagram', example: 'The website you imagined? You can build it. Right now.' },
+    socialPosts: [
+      { platform: 'X / Twitter', handle: '@webflow', copy: "You've been waiting for a developer.\n\nWebflow is the developer." },
+      { platform: 'Instagram', handle: '@webflow', copy: "The website you imagined?\n\nYou can build it. Right now.\n\nNo compromise." },
+      { platform: 'LinkedIn', handle: 'Webflow', copy: "Design agencies that switched to Webflow ship 60% faster and retain 40% more design control. Here's how." },
     ],
+    emailSubjects: ["You don't need a developer for this.", 'Build what you imagined. No compromises.', 'New: Advanced animations, zero code.'],
+    emailOpener: "We built Webflow for designers who were tired of handing off files and getting back something slightly wrong. That gap is gone now.",
+    blogOpener: "The best web design tool is the one that gets out of your way. For 20 years, that wasn't possible without writing code. It is now.",
+    adHeadlines: ['Build professional websites. Without writing code.', 'Design without limits. Build without compromise.', 'The web, the way you imagined it.'],
     antiPatterns: [
-      'Never imply Webflow is "easy" in a dumbed-down way.',
-      'Never ignore the power user.',
-      'Never position as a template-picker.',
-      'Never shy away from the developer comparison.',
+      { rule: '"Easy" or "beginner-friendly" as lead positioning', reason: "Webflow is for professionals. Power is the message." },
+      { rule: 'Positioning as a template-picker', reason: "Webflow is a creation tool, not a library." },
+      { rule: 'Avoiding the developer comparison', reason: "The comparison is a feature. Own it." },
+      { rule: 'Oversimplifying what the product does', reason: "The sophistication IS the value proposition." },
+      { rule: 'Ignoring the power user', reason: "Webflow's best customers want more power, not less." },
     ],
-    imageStyle: 'Bold, high-contrast. Complex UI that looks powerful but accessible. Blue gradients on dark backgrounds.',
-    keywords: ['Empowerment', 'Control', 'Visual', 'Professional', 'Creative'],
-    bg: '#1a1a2e',
-    accent: '#4353ff',
+    imageRules: {
+      always: ['Bold, high-contrast UI screenshots', 'Complex-looking interfaces that feel accessible', 'Blue gradients on dark backgrounds', 'Real websites built in Webflow'],
+      never: ['Simple or sparse UI screenshots (implies limited capability)', 'Stock photos of people pointing at screens', 'Generic SaaS dashboard aesthetic', 'Anything that looks like a basic website builder'],
+    },
+    bg: '#1a1a2e', fg: '#ffffff', accent: '#4353ff', accentAlt: '#146ef5',
+    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   shopify: {
-    name: 'Shopify',
-    domain: 'shopify.com',
-    tagline: 'Commerce for everyone.',
-    about: 'Shopify is the great equalizer — it speaks to the first-time seller and the billion-dollar brand with the same respect. The voice is optimistic, grounded, and inclusive.',
+    name: 'Shopify', domain: 'shopify.com',
+    principle: 'Commerce for everyone',
+    voice: 'Optimistic. Grounded. Inclusive.',
+    target: 'First-time sellers and billion-dollar brands, treated equally',
+    differentiator: 'The great equalizer of commerce',
+    positioning: "Shopify is the great equalizer — it speaks to the first-time seller and the billion-dollar brand with the same respect and optimism. Commerce is for everyone, and Shopify makes you believe it.",
     colors: [
-      { hex: '#96bf48', name: 'Shopify Green' },
-      { hex: '#1a1a1a', name: 'Near Black' },
-      { hex: '#ffffff', name: 'White' },
-      { hex: '#5c6ac4', name: 'Shopify Purple' },
+      { hex: '#96bf48', name: 'Shopify Green', desc: 'Primary brand color — growth and commerce' },
+      { hex: '#1a1a1a', name: 'Near Black', desc: 'Primary text and UI' },
+      { hex: '#ffffff', name: 'White', desc: 'Primary background' },
+      { hex: '#5c6ac4', name: 'Shopify Purple', desc: 'Admin UI and secondary brand' },
+      { hex: '#f9fafb', name: 'Smoke', desc: 'Subtle backgrounds and page sections' },
     ],
-    fonts: [
-      { name: 'ShopifySans', role: 'Headlines' },
-      { name: 'Inter', role: 'Body' },
-    ],
+    primaryFont: { name: 'ShopifySans', desc: 'Custom typeface. Friendly and professional — the personality of the brand in letterform.' },
+    bodyFont: { name: 'Inter', size: '16px', desc: 'Clean and readable. The merchant\'s experience is always the priority.' },
     voiceRules: [
-      { do: 'Celebrate the entrepreneurial ambition at every level.', dont: 'Speak only to big brands.' },
-      { do: 'Make complexity feel manageable.', dont: 'Overwhelm with features.' },
-      { do: 'Use success stories as proof points.', dont: 'Lead with product specs.' },
+      { title: 'Celebrate ambition at every level', good: "Your first sale is closer than you think. And your millionth? Just as possible.", bad: "Shopify helps businesses of all sizes sell online and in person." },
+      { title: 'Make the path to success feel real', good: "From idea to first sale in a weekend. Thousands of merchants do it every day.", bad: "Get started with Shopify's easy-to-use platform." },
+      { title: 'Use proof, not promises', good: "1M+ merchants in 175 countries trust Shopify. Including your favorite indie brand.", bad: "Shopify is the world's leading commerce platform." },
+      { title: 'The emotional journey is the story', good: "That moment your first sale notification hits — we built everything for that moment.", bad: "Shopify provides merchants with the tools they need to succeed in commerce." },
+      { title: 'Talk about the seller, not the software', good: "You built something worth selling. We'll handle everything else.", bad: "Shopify offers inventory management, payment processing, and analytics tools." },
     ],
-    templates: [
-      { platform: 'Twitter / X', example: 'Your first sale is closer than you think. Shopify gets you there.' },
-      { platform: 'Ad Headline', example: 'Start selling today. Grow forever.' },
-      { platform: 'Email Subject', example: 'Your store is ready. Your customers are waiting.' },
-      { platform: 'Instagram', example: 'From idea to first sale in a weekend. Real stories, real sellers.' },
+    socialPosts: [
+      { platform: 'X / Twitter', handle: '@Shopify', copy: "Your first sale is closer than you think.\n\nShopify gets you there." },
+      { platform: 'Instagram', handle: '@shopify', copy: "From idea to first sale in a weekend.\n\nReal sellers. Real stories.\n\n→ Link in bio." },
+      { platform: 'LinkedIn', handle: 'Shopify', copy: "Every big brand started with one sale. Here are 10 merchants who built theirs from nothing. Their first Shopify day vs. today." },
     ],
+    emailSubjects: ['Your store is ready. Your customers are waiting.', 'Your first sale could be this weekend.', 'The brands you love? They started here.'],
+    emailOpener: "Someone is out there right now looking for exactly what you make. Shopify gets you in front of them.",
+    blogOpener: "Every billion-dollar brand you admire started with one sale to one person. Here's what that moment looks like for 10 Shopify merchants.",
+    adHeadlines: ['Start selling today. Grow forever.', 'Commerce for everyone.', 'Your store. Your rules. Your revenue.'],
     antiPatterns: [
-      'Never make small sellers feel small.',
-      'Never lead with pricing or limitations.',
-      'Never ignore the emotional journey of starting a business.',
-      'Never be too corporate — Shopify is for builders.',
+      { rule: 'Making small sellers feel small', reason: "Every seller is treated with the same respect." },
+      { rule: 'Leading with pricing or features', reason: "Lead with the aspiration and the success story." },
+      { rule: 'Ignoring the emotional journey', reason: "Selling is personal. Shopify knows that." },
+      { rule: '"E-commerce platform" as the positioning', reason: "Shopify is a commerce partner, not a tool." },
+      { rule: 'Corporate, impersonal language', reason: "Shopify talks to people with real dreams, not business units." },
     ],
-    imageStyle: 'Warm, diverse, real people. Real storefronts. Product photography that looks handmade. Optimistic natural light.',
-    keywords: ['Inclusive', 'Optimistic', 'Commerce', 'Growth', 'Entrepreneurship'],
-    bg: '#ffffff',
-    accent: '#96bf48',
+    imageRules: {
+      always: ['Warm, diverse, real people', 'Real storefronts and products', 'Photography that looks handmade', 'Optimistic natural light'],
+      never: ['Stock photos of generic business people', 'Cluttered product grids', 'Cold or corporate office imagery', 'Anything that looks like accounting software'],
+    },
+    bg: '#ffffff', fg: '#1a1a1a', accent: '#96bf48', accentAlt: '#5c6ac4',
+    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   duolingo: {
-    name: 'Duolingo',
-    domain: 'duolingo.com',
-    tagline: 'Learning a language should feel like playing a game.',
-    about: 'Duolingo is the internet\'s most unhinged brand — and it works. The voice is chaotic, self-aware, meme-fluent, and secretly very smart about motivation psychology.',
+    name: 'Duolingo', domain: 'duolingo.com',
+    principle: 'Learning should feel like a game',
+    voice: 'Chaotic. Self-aware. Meme-fluent. Secretly educational.',
+    target: 'Anyone who wants to learn a language but keeps quitting',
+    differentiator: "The internet's most unhinged brand — and the most effective learning app",
+    positioning: "Duolingo is the internet's most unhinged brand and it works. The voice is chaotic, self-aware, meme-fluent, and secretly very smart about motivation psychology. The owl is watching.",
     colors: [
-      { hex: '#58cc02', name: 'Duo Green' },
-      { hex: '#1cb0f6', name: 'Sky Blue' },
-      { hex: '#ff4b4b', name: 'Streak Red' },
-      { hex: '#ffc800', name: 'XP Gold' },
+      { hex: '#58cc02', name: 'Duo Green', desc: 'Primary brand color — growth, success' },
+      { hex: '#1cb0f6', name: 'Sky Blue', desc: 'Secondary brand and interactive elements' },
+      { hex: '#ff4b4b', name: 'Streak Red', desc: 'Urgency, broken streaks, danger' },
+      { hex: '#ffc800', name: 'XP Gold', desc: 'Achievement, reward, celebration' },
+      { hex: '#ffffff', name: 'White', desc: 'Primary background' },
     ],
-    fonts: [
-      { name: 'Din Round', role: 'All UI' },
-      { name: 'Feather Bold', role: 'Marketing' },
-    ],
+    primaryFont: { name: 'Din Round', desc: 'Rounded, friendly, and approachable. Feels like it belongs in a game — because Duolingo is a game.' },
+    bodyFont: { name: 'Feather Bold', size: '18px', desc: 'Fun and readable. Learning should never feel like reading a textbook.' },
     voiceRules: [
-      { do: 'Be playful, irreverent, and self-aware.', dont: 'Sound like an educational institution.' },
-      { do: 'Use meme culture fluently when appropriate.', dont: 'Force references that feel dated.' },
-      { do: 'Gamify everything — streaks, XP, achievement framing.', dont: 'Talk about "studying."' },
+      { title: 'Be playful. Be threatening. Be both.', good: "Don't make Duo use the green screen.", bad: "Learning a language is easy with Duolingo's fun, gamified approach." },
+      { title: 'Use meme culture fluently', good: "You woke up at 3am to do your Spanish lesson. We see you. We love you. 👀", bad: "Duolingo sends helpful reminders to keep users on track." },
+      { title: 'Gamify every interaction', good: "7-day streak. You're 4 days from legendary. Don't blow it.", bad: "Keep practicing daily to improve your language skills." },
+      { title: "The brand is the bit. Commit to it.", good: "Duo knows where you live. Duo knows where you work. Duo just wants you to do your lesson.", bad: "We send friendly reminders to help users remember to practice." },
+      { title: "Self-awareness is the superpower", good: "Yes, we're a bit much. That's why you remember us.", bad: "Duolingo uses scientifically proven methods to maximize language retention." },
     ],
-    templates: [
-      { platform: 'Twitter / X', example: 'Do your lesson. Duo is watching. 👀' },
-      { platform: 'Push Notification', example: 'You\'ve been ghosting me. Your streak disagrees.' },
-      { platform: 'Ad Headline', example: 'Learn a language. Fear the owl.' },
-      { platform: 'Instagram', example: '365-day streak. Duo cried. So did we. Keep going.' },
+    socialPosts: [
+      { platform: 'X / Twitter', handle: '@duolingo', copy: "Do your lesson.\n\nDuo is watching. 👀" },
+      { platform: 'TikTok', handle: '@duolingo', copy: "POV: You skipped your Duolingo lesson and Duo just showed up at your house in full green screen." },
+      { platform: 'Instagram', handle: '@duolingo', copy: "365-day streak.\n\nDuo cried.\n\nSo did we.\n\nKeep going. 💚" },
     ],
+    emailSubjects: ["You've been ghosting me.", 'Your streak is in danger. (This is not a drill.)', "Duo misses you. It's getting weird."],
+    emailOpener: "Hi. It's Duo. You haven't done your lesson in 3 days. I'm not angry. I'm just disappointed. Actually no. I'm a little angry.",
+    blogOpener: "We built the most annoying push notification in tech history on purpose. Here's why it works.",
+    adHeadlines: ['Learn a language. Fear the owl.', "Duo's watching. Do your lesson.", '5 minutes a day. Or Duo finds you.'],
     antiPatterns: [
-      'Never sound like homework.',
-      'Never take yourself too seriously.',
-      'Never miss an opportunity to reference the streak.',
-      'Never ignore the meme.',
+      { rule: 'Sounding like an educational institution', reason: "Duolingo is a game that teaches. Never a school." },
+      { rule: 'Taking yourself too seriously', reason: "The whole brand is a bit. Always commit to it." },
+      { rule: 'Missing an opportunity to reference the streak', reason: "The streak is life. The streak is the brand." },
+      { rule: 'Being wholesome without the edge', reason: "The warmth and the threat coexist. That's Duo." },
+      { rule: 'Explaining the joke', reason: "If you have to explain it, it isn't funny." },
     ],
-    imageStyle: 'Bright, cartoon-adjacent. Duo the owl in increasingly unhinged situations. Flat illustration, bold colors, maximum personality.',
-    keywords: ['Playful', 'Irreverent', 'Gamified', 'Meme-fluent', 'Addictive'],
-    bg: '#ffffff',
-    accent: '#58cc02',
+    imageRules: {
+      always: ['Duo the owl in increasingly unhinged situations', 'Bright, flat illustration style', 'Bold solid colors', 'Maximum personality in every frame'],
+      never: ['Realistic photography (unless it\'s Duo photobombing it)', 'Muted or sophisticated color palettes', 'Anything that looks like a corporate app', 'Earnest without irony'],
+    },
+    bg: '#ffffff', fg: '#1a1a1a', accent: '#58cc02', accentAlt: '#ff4b4b',
+    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   superhuman: {
-    name: 'Superhuman',
-    domain: 'superhuman.com',
-    tagline: 'The fastest email experience ever made.',
-    about: 'Superhuman is obsessively focused on one thing: speed. The brand speaks to high-performers who feel time as a physical resource. Every word earns its nanosecond.',
+    name: 'Superhuman', domain: 'superhuman.com',
+    principle: 'The fastest email experience ever made',
+    voice: 'Obsessive. Precise. Unapologetically elite.',
+    target: 'High-performers who feel time as a physical resource',
+    differentiator: 'Speed so extreme it changes how you relate to email',
+    positioning: "Superhuman is obsessively focused on one thing: speed. The brand speaks to high-performers who feel time as a physical resource — people for whom 4 hours in email is a real cost. Every word earns its nanosecond.",
     colors: [
-      { hex: '#e06c00', name: 'Superhuman Orange' },
-      { hex: '#1c1c1c', name: 'Near Black' },
-      { hex: '#ffffff', name: 'White' },
-      { hex: '#f5f0eb', name: 'Warm Cream' },
+      { hex: '#e06c00', name: 'Superhuman Orange', desc: 'Primary brand color — urgency and energy' },
+      { hex: '#1c1c1c', name: 'Near Black', desc: 'Primary background (dark-first brand)' },
+      { hex: '#ffffff', name: 'White', desc: 'Text and light UI elements' },
+      { hex: '#f5f0eb', name: 'Warm Cream', desc: 'Light backgrounds and subtle warmth' },
+      { hex: '#e8824a', name: 'Amber', desc: 'Secondary accent and gradient partner' },
     ],
-    fonts: [
-      { name: 'Tiempos Headline', role: 'Display' },
-      { name: 'Inter', role: 'UI & Body' },
-    ],
+    primaryFont: { name: 'Tiempos Headline', desc: 'Elegant and editorial. Superhuman is premium — the typography signals that before you read a word.' },
+    bodyFont: { name: 'Inter', size: '16px', desc: 'Precise and legible. No ornamentation. The content is the focus.' },
     voiceRules: [
-      { do: 'Make speed feel like a moral imperative.', dont: 'Treat time savings as a minor benefit.' },
-      { do: 'Speak to the top 1% of email users.', dont: 'Try to appeal to everyone.' },
-      { do: 'Use specific, measurable claims.', dont: 'Use vague superlatives.' },
+      { title: 'Make speed feel like a moral imperative', good: "Time is the only non-renewable resource. We give you 2 hours of it back every day.", bad: "Superhuman helps you manage your email more efficiently." },
+      { title: 'Speak to the top 1% of email users', good: "Built for people who think 4 hours in email is not a personality trait — it's a problem.", bad: "Superhuman is great for anyone who uses email regularly." },
+      { title: 'Specific numbers. Always.', good: "The average Superhuman user reaches inbox zero 4x faster. That's 2 hours back per day.", bad: "Superhuman dramatically speeds up your email experience." },
+      { title: "Don't apologize for the price", good: "At $30/month, Superhuman costs less per hour than your coffee habit. Do the math.", bad: "While Superhuman is a premium product, many users find it worth the investment." },
+      { title: 'Every interaction is a speed claim', good: "Open any email in under 100ms. Every time. No exceptions.", bad: "Superhuman is designed to be fast and responsive." },
     ],
-    templates: [
-      { platform: 'Twitter / X', example: 'The average knowledge worker spends 4 hours/day in email. Superhuman cuts that in half.' },
-      { platform: 'Ad Headline', example: 'Spend less time in email. Do more of everything else.' },
-      { platform: 'Email Subject', example: 'You could get through email in half the time.' },
-      { platform: 'Instagram', example: 'Inbox zero in 23 minutes. This is what Superhuman feels like.' },
+    socialPosts: [
+      { platform: 'X / Twitter', handle: '@Superhuman', copy: "The average knowledge worker spends 4 hours/day in email.\n\nSuperhuman cuts that in half.\n\nThat's your life back." },
+      { platform: 'X / Twitter', handle: '@Superhuman', copy: "Inbox zero in 23 minutes.\n\nThis is what Superhuman feels like." },
+      { platform: 'LinkedIn', handle: 'Superhuman', copy: "We surveyed 5,000 executives. The #1 productivity drain? Email. Here's what the fastest among them do differently." },
     ],
+    emailSubjects: ['You could get through email in half the time.', 'Inbox zero in 23 minutes. Here\'s how.', 'The 2 hours you\'re leaving in your inbox every day.'],
+    emailOpener: "We built Superhuman for people who believe their email shouldn't take 4 hours. It doesn't have to.",
+    blogOpener: "I spent 6 months tracking exactly how long CEOs spend in email. The average was 4.1 hours per day. The Superhuman users? 1.8 hours. Here's everything they do differently.",
+    adHeadlines: ['Spend less time in email. Do more of everything else.', 'The fastest email experience ever made.', 'Inbox zero, every day. No exceptions.'],
     antiPatterns: [
-      'Never apologize for the price.',
-      'Never speak to casual email users.',
-      'Never bury the speed claim.',
-      'Never use stock imagery of overflowing inboxes.',
+      { rule: 'Apologizing for the price', reason: "$30/month is a bargain for 2 hours back per day. Do the math out loud." },
+      { rule: 'Speaking to casual email users', reason: "Superhuman is for people with an email problem. Not everyone." },
+      { rule: 'Vague speed claims', reason: "Put a number on it. Always." },
+      { rule: 'Burying the time-saved metric', reason: "Lead with hours. Lead with minutes. Lead with the math." },
+      { rule: 'Warm or casual brand language', reason: "Superhuman is precise. Premium. That's the personality." },
     ],
-    imageStyle: 'Dark, focused, minimal. Single keyboard shortcut highlighted. The UI is the hero. Warm orange accent on near-black.',
-    keywords: ['Speed', 'Performance', 'Elite', 'Focus', 'Time'],
-    bg: '#1c1c1c',
-    accent: '#e06c00',
+    imageRules: {
+      always: ['Dark mode interface as hero', 'Single keyboard shortcut highlighted', 'Clean typography — the UI is the art', 'Warm orange accent on near-black backgrounds'],
+      never: ['Light mode anything', 'Overflowing inboxes as the problem visual', 'Stock photos of people stressed at computers', 'Anything that looks like a basic email client'],
+    },
+    bg: '#1c1c1c', fg: '#ffffff', accent: '#e06c00', accentAlt: '#f5f0eb',
+    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
 }
 
-export function generateStaticParams() {
-  return Object.keys(EXAMPLES).map(slug => ({ slug }))
-}
+// ─── Utilities ───
 
 function isDark(hex: string) {
   const r = parseInt(hex.slice(1, 3), 16)
@@ -477,188 +602,457 @@ function isDark(hex: string) {
   return (r * 299 + g * 587 + b * 114) / 1000 < 128
 }
 
-export default function ExamplePage({ params }: { params: { slug: string } }) {
-  const brand = EXAMPLES[params.slug]
-  if (!brand) notFound()
+// ─── Fade-in component ───
 
+function FadeIn({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const [visible, setVisible] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true) }, { threshold: 0.08 })
+    if (ref.current) obs.observe(ref.current)
+    return () => obs.disconnect()
+  }, [])
+  return (
+    <div ref={ref} className={className} style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(20px)', transition: `opacity 0.7s ease ${delay}s, transform 0.7s ease ${delay}s` }}>
+      {children}
+    </div>
+  )
+}
+
+// ─── Section: Overview ───
+
+function OverviewSection({ brand }: { brand: Brand }) {
   const darkBg = isDark(brand.bg)
-  const textColor = darkBg ? 'text-white' : 'text-gray-900'
-  const subColor = darkBg ? 'text-white/60' : 'text-gray-500'
+  const textMuted = darkBg ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)'
+  const cardBg = darkBg ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
+  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
 
   return (
-    <div className="min-h-screen" style={{ background: brand.bg }}>
-      <Navbar />
-
-      {/* Hero */}
-      <section className="pt-28 pb-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <Link href="/examples" className={`text-sm ${subColor} hover:opacity-80 mb-6 inline-block`}>
-            ← All examples
-          </Link>
-          <div className="flex items-end gap-4 mb-4">
-            <h1 className={`text-6xl font-black ${textColor}`}>{brand.name}</h1>
-            <span className={`text-lg ${subColor} mb-2 font-mono`}>{brand.domain}</span>
-          </div>
-          <p className={`text-2xl font-medium ${subColor} mb-2`}>&ldquo;{brand.tagline}&rdquo;</p>
-          <p className={`text-base ${subColor} max-w-2xl`}>{brand.about}</p>
-
-          {/* Keywords */}
-          <div className="flex flex-wrap gap-2 mt-6">
-            {brand.keywords.map(k => (
-              <span
-                key={k}
-                className="px-3 py-1 rounded-full text-sm font-medium"
-                style={{ background: brand.accent, color: isDark(brand.accent) ? '#fff' : '#000' }}
-              >
-                {k}
-              </span>
-            ))}
-          </div>
+    <div>
+      <FadeIn>
+        <div style={{ textAlign: 'center', padding: '40px 0 32px' }}>
+          <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 12 }}>{brand.name} Brand Portfolio</h2>
+          <p style={{ fontSize: 18, color: textMuted, maxWidth: 540, margin: '0 auto' }}>A complete identity system for every surface.</p>
         </div>
-      </section>
+      </FadeIn>
 
-      {/* Colors */}
-      <section className="py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className={`text-xs font-bold uppercase tracking-widest ${subColor} mb-6`}>Color Palette</h2>
-          <div className="flex flex-wrap gap-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 32 }}>
+        {[
+          { label: 'Brand Principle', value: brand.principle },
+          { label: 'Voice', value: brand.voice },
+          { label: 'Target', value: brand.target },
+          { label: 'Differentiator', value: brand.differentiator },
+        ].map((item, i) => (
+          <FadeIn key={i} delay={i * 0.08}>
+            <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{item.label}</span>
+              <span style={{ fontSize: 16, fontWeight: 500, color: brand.fg, lineHeight: 1.4 }}>{item.value}</span>
+            </div>
+          </FadeIn>
+        ))}
+      </div>
+
+      <FadeIn delay={0.3}>
+        <div style={{ borderLeft: `3px solid ${brand.accent}`, paddingLeft: 24, paddingTop: 8, paddingBottom: 8, marginBottom: 32 }}>
+          <p style={{ fontSize: 19, color: brand.fg, fontWeight: 500, lineHeight: 1.5, fontStyle: 'italic' }}>{brand.positioning}</p>
+        </div>
+      </FadeIn>
+
+      <FadeIn delay={0.4}>
+        <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 20, padding: 28 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Color Palette Preview</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             {brand.colors.map(c => (
-              <div key={c.hex} className="flex flex-col items-center gap-2">
-                <div
-                  className="w-16 h-16 rounded-2xl shadow-lg border border-white/10"
-                  style={{ background: c.hex }}
-                />
-                <span className={`text-xs font-mono ${subColor}`}>{c.hex}</span>
-                <span className={`text-xs ${subColor} opacity-70`}>{c.name}</span>
+              <div key={c.hex} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 56, height: 56, borderRadius: 14, background: c.hex, border: `2px solid ${darkBg ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'}`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} />
+                <span style={{ fontSize: 11, fontFamily: 'monospace', color: textMuted }}>{c.hex}</span>
+                <span style={{ fontSize: 10, color: textMuted, opacity: 0.7 }}>{c.name}</span>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </FadeIn>
+    </div>
+  )
+}
 
-      {/* Typography */}
-      <section className="py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className={`text-xs font-bold uppercase tracking-widest ${subColor} mb-6`}>Typography</h2>
-          <div className="flex flex-wrap gap-4">
-            {brand.fonts.map(f => (
-              <div
-                key={f.name}
-                className="px-5 py-4 rounded-2xl border"
-                style={{
-                  borderColor: darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                  background: darkBg ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                }}
-              >
-                <div className={`text-lg font-bold ${textColor}`}>{f.name}</div>
-                <div className={`text-xs ${subColor}`}>{f.role}</div>
+// ─── Section: Voice & Tone ───
+
+function VoiceToneSection({ brand }: { brand: Brand }) {
+  const darkBg = isDark(brand.bg)
+  const cardBg = darkBg ? 'rgba(255,255,255,0.04)' : '#ffffff'
+  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+
+  return (
+    <div>
+      <FadeIn>
+        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Voice & Tone</h2>
+        <p style={{ fontSize: 17, color: brand.fg, opacity: 0.5, marginBottom: 32 }}>{brand.voiceRules.length} rules. No exceptions.</p>
+      </FadeIn>
+
+      {brand.voiceRules.map((rule, i) => (
+        <FadeIn key={i} delay={i * 0.07}>
+          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 16, padding: 24, marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: brand.accent, letterSpacing: '0.08em', marginBottom: 6 }}>0{i + 1}</div>
+            <h3 style={{ fontSize: 18, fontWeight: 600, color: brand.fg, marginBottom: 16, lineHeight: 1.3 }}>{rule.title}</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div>
+                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: 'rgba(34,197,94,0.15)', color: '#22c55e', marginBottom: 8 }}>DO</span>
+                <p style={{ fontSize: 14, color: brand.fg, lineHeight: 1.5 }}>{rule.good}</p>
               </div>
+              <div>
+                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: 'rgba(239,68,68,0.15)', color: '#ef4444', marginBottom: 8 }}>DON&apos;T</span>
+                <p style={{ fontSize: 14, color: brand.fg, opacity: 0.6, lineHeight: 1.5 }}>{rule.bad}</p>
+              </div>
+            </div>
+          </div>
+        </FadeIn>
+      ))}
+    </div>
+  )
+}
+
+// ─── Section: Visual Identity ───
+
+function VisualIdentitySection({ brand }: { brand: Brand }) {
+  const darkBg = isDark(brand.bg)
+  const textMuted = darkBg ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)'
+  const cardBg = darkBg ? 'rgba(255,255,255,0.05)' : '#f8f8f8'
+  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
+
+  return (
+    <div>
+      <FadeIn>
+        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Visual Identity</h2>
+        <p style={{ fontSize: 17, color: textMuted, marginBottom: 32 }}>Precision through restraint.</p>
+      </FadeIn>
+
+      <FadeIn delay={0.1}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Color Palette</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 48 }}>
+          {brand.colors.map((c, i) => (
+            <div key={i} style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${cardBorder}` }}>
+              <div style={{ background: c.hex, height: 88, display: 'flex', alignItems: 'flex-end', padding: '10px 12px' }}>
+                <span style={{ color: isDark(c.hex) ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.7)', fontSize: 12, fontWeight: 600, fontFamily: 'monospace' }}>{c.hex}</span>
+              </div>
+              <div style={{ padding: 12, background: darkBg ? 'rgba(255,255,255,0.05)' : '#fff' }}>
+                <div style={{ fontWeight: 600, fontSize: 13, color: brand.fg }}>{c.name}</div>
+                <div style={{ fontSize: 11, color: textMuted, marginTop: 3 }}>{c.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </FadeIn>
+
+      <FadeIn delay={0.2}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Typography</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 48 }}>
+          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Headlines</span>
+            <span style={{ fontSize: 28, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', lineHeight: 1.1 }}>{brand.primaryFont.name}</span>
+            <span style={{ fontSize: 12, color: textMuted, marginTop: 4 }}>{brand.primaryFont.desc}</span>
+          </div>
+          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Body — {brand.bodyFont.size}</span>
+            <span style={{ fontSize: 17, color: brand.fg, lineHeight: 1.5 }}>{brand.bodyFont.name} — {brand.bodyFont.desc}</span>
+          </div>
+        </div>
+      </FadeIn>
+
+      <FadeIn delay={0.3}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Image Generation Rules</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div style={{ background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 16, padding: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: '#22c55e', marginBottom: 12 }}>✓ Always</div>
+            {brand.imageRules.always.map((item, i) => (
+              <div key={i} style={{ fontSize: 13, color: brand.fg, padding: '4px 0', opacity: 0.85 }}>→ {item}</div>
+            ))}
+          </div>
+          <div style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: '#ef4444', marginBottom: 12 }}>✕ Never</div>
+            {brand.imageRules.never.map((item, i) => (
+              <div key={i} style={{ fontSize: 13, color: brand.fg, padding: '4px 0', opacity: 0.85 }}>✕ {item}</div>
             ))}
           </div>
         </div>
-      </section>
+      </FadeIn>
+    </div>
+  )
+}
 
-      {/* Voice Rules */}
-      <section className="py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className={`text-xs font-bold uppercase tracking-widest ${subColor} mb-6`}>Voice Rules</h2>
-          <div className="space-y-4">
-            {brand.voiceRules.map((rule, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-2xl overflow-hidden"
-              >
-                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                  <div className="text-emerald-400 text-xs font-bold mb-1">✓ DO</div>
-                  <div className={`text-sm ${textColor}`}>{rule.do}</div>
-                </div>
-                <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20">
-                  <div className="text-red-400 text-xs font-bold mb-1">✕ DON&apos;T</div>
-                  <div className={`text-sm ${textColor}`}>{rule.dont}</div>
-                </div>
+// ─── Section: Social Media ───
+
+function SocialMediaSection({ brand }: { brand: Brand }) {
+  const darkBg = isDark(brand.bg)
+  const cardBg = darkBg ? 'rgba(255,255,255,0.05)' : '#ffffff'
+  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
+
+  return (
+    <div>
+      <FadeIn>
+        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Social Media</h2>
+        <p style={{ fontSize: 17, color: brand.fg, opacity: 0.5, marginBottom: 32 }}>How {brand.name} shows up on every platform.</p>
+      </FadeIn>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 40 }}>
+        {brand.socialPosts.map((post, i) => (
+          <FadeIn key={i} delay={i * 0.1}>
+            <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 20, padding: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{post.platform}</span>
+                {post.handle && <span style={{ fontSize: 12, color: brand.fg, opacity: 0.4, fontFamily: 'monospace' }}>{post.handle}</span>}
               </div>
+              <p style={{ fontSize: 17, color: brand.fg, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{post.copy}</p>
+            </div>
+          </FadeIn>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Section: Email ───
+
+function EmailSection({ brand }: { brand: Brand }) {
+  const darkBg = isDark(brand.bg)
+  const cardBg = darkBg ? 'rgba(255,255,255,0.05)' : '#ffffff'
+  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
+  const chipBg = darkBg ? 'rgba(255,255,255,0.08)' : '#f3f4f6'
+
+  return (
+    <div>
+      <FadeIn>
+        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Email</h2>
+        <p style={{ fontSize: 17, color: brand.fg, opacity: 0.5, marginBottom: 32 }}>Subject lines, openers, and the formula behind them.</p>
+      </FadeIn>
+
+      <FadeIn delay={0.1}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Subject Line Examples</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 32 }}>
+          {brand.emailSubjects.map((subj, i) => (
+            <div key={i} style={{ background: chipBg, borderRadius: 12, padding: '14px 18px', fontSize: 15, color: brand.fg, fontWeight: 500 }}>
+              📧 {subj}
+            </div>
+          ))}
+        </div>
+      </FadeIn>
+
+      <FadeIn delay={0.2}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Email Opener</p>
+        <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 20, padding: 28, marginBottom: 32 }}>
+          <p style={{ fontSize: 18, color: brand.fg, lineHeight: 1.6, fontStyle: 'italic' }}>&ldquo;{brand.emailOpener}&rdquo;</p>
+        </div>
+      </FadeIn>
+    </div>
+  )
+}
+
+// ─── Section: Blog & Editorial ───
+
+function BlogSection({ brand }: { brand: Brand }) {
+  const darkBg = isDark(brand.bg)
+  const cardBg = darkBg ? 'rgba(255,255,255,0.05)' : '#ffffff'
+  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
+
+  return (
+    <div>
+      <FadeIn>
+        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Blog & Editorial</h2>
+        <p style={{ fontSize: 17, color: brand.fg, opacity: 0.5, marginBottom: 32 }}>How {brand.name} opens a story.</p>
+      </FadeIn>
+
+      <FadeIn delay={0.1}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Opening Line Formula</p>
+        <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 20, padding: 36, marginBottom: 32 }}>
+          <p style={{ fontSize: 26, fontWeight: 600, color: brand.fg, lineHeight: 1.4, letterSpacing: '-0.01em' }}>&ldquo;{brand.blogOpener}&rdquo;</p>
+        </div>
+      </FadeIn>
+
+      <FadeIn delay={0.2}>
+        <div style={{ borderLeft: `3px solid ${brand.accent}`, paddingLeft: 20, paddingTop: 4, paddingBottom: 4 }}>
+          <p style={{ fontSize: 14, color: brand.fg, opacity: 0.6, lineHeight: 1.6 }}>
+            Editorial formula: Start with a contradiction, a reframe, or a number that makes the reader feel something. Never start with the product. Never start with a question. Lead with insight.
+          </p>
+        </div>
+      </FadeIn>
+    </div>
+  )
+}
+
+// ─── Section: Ad Creative ───
+
+function AdCreativeSection({ brand }: { brand: Brand }) {
+  const darkBg = isDark(brand.bg)
+  const cardBg = darkBg ? 'rgba(255,255,255,0.05)' : '#f8f8f8'
+  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
+
+  return (
+    <div>
+      <FadeIn>
+        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Ad Creative</h2>
+        <p style={{ fontSize: 17, color: brand.fg, opacity: 0.5, marginBottom: 32 }}>Headlines that stop the scroll.</p>
+      </FadeIn>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 40 }}>
+        {brand.adHeadlines.map((ad, i) => (
+          <FadeIn key={i} delay={i * 0.08}>
+            <div style={{
+              background: i % 2 === 0 ? brand.accent : (darkBg ? 'rgba(255,255,255,0.08)' : '#f3f4f6'),
+              borderRadius: 20,
+              padding: '32px 24px',
+              minHeight: 140,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              border: `1px solid ${cardBorder}`,
+            }}>
+              <p style={{
+                fontSize: 22,
+                fontWeight: 700,
+                color: i % 2 === 0 ? (isDark(brand.accent) ? '#fff' : '#000') : brand.fg,
+                lineHeight: 1.25,
+                letterSpacing: '-0.02em',
+              }}>
+                {ad}
+              </p>
+            </div>
+          </FadeIn>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Section: Anti-Patterns ───
+
+function AntiPatternsSection({ brand }: { brand: Brand }) {
+  const darkBg = isDark(brand.bg)
+  const cardBg = darkBg ? 'rgba(255,255,255,0.04)' : '#ffffff'
+  const cardBorder = darkBg ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+
+  return (
+    <div>
+      <FadeIn>
+        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Anti-Patterns</h2>
+        <p style={{ fontSize: 17, color: brand.fg, opacity: 0.5, marginBottom: 32 }}>What {brand.name} never does.</p>
+      </FadeIn>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {brand.antiPatterns.map((p, i) => (
+          <FadeIn key={i} delay={i * 0.07}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: 20, background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 14 }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 13, color: '#ef4444', fontWeight: 700 }}>✕</div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 15, color: brand.fg, marginBottom: 4 }}>{p.rule}</div>
+                <div style={{ fontSize: 13, color: brand.fg, opacity: 0.5 }}>{p.reason}</div>
+              </div>
+            </div>
+          </FadeIn>
+        ))}
+      </div>
+
+      <FadeIn delay={0.4}>
+        <div style={{ marginTop: 40, background: brand.accent, borderRadius: 20, padding: '48px 32px', textAlign: 'center' }}>
+          <h3 style={{ color: isDark(brand.accent) ? '#fff' : '#000', fontSize: 36, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 8 }}>
+            {brand.principle}
+          </h3>
+          <p style={{ color: isDark(brand.accent) ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)', fontSize: 16 }}>
+            {brand.name} — {brand.domain}
+          </p>
+        </div>
+      </FadeIn>
+    </div>
+  )
+}
+
+// ─── Main ───
+
+export function generateStaticParams() {
+  return Object.keys(BRANDS).map(slug => ({ slug }))
+}
+
+export default function ExamplePage({ params }: { params: { slug: string } }) {
+  const brand = BRANDS[params.slug]
+  const [activeSection, setActiveSection] = useState(0)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  if (!brand) return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: '#f9fafb' }}>
+      <p style={{ color: '#6b7280' }}>Brand not found.</p>
+      <Link href="/examples" style={{ color: '#0d9488', textDecoration: 'underline' }}>← Back to examples</Link>
+    </div>
+  )
+
+  const darkBg = isDark(brand.bg)
+  const navBg = darkBg
+    ? (scrolled ? 'rgba(15,15,20,0.92)' : brand.bg)
+    : (scrolled ? 'rgba(255,255,255,0.92)' : brand.bg)
+
+  const sectionComponents = [
+    <OverviewSection key="overview" brand={brand} />,
+    <VoiceToneSection key="voice" brand={brand} />,
+    <VisualIdentitySection key="visual" brand={brand} />,
+    <SocialMediaSection key="social" brand={brand} />,
+    <EmailSection key="email" brand={brand} />,
+    <BlogSection key="blog" brand={brand} />,
+    <AdCreativeSection key="ad" brand={brand} />,
+    <AntiPatternsSection key="anti" brand={brand} />,
+  ]
+
+  return (
+    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif', background: brand.bg, minHeight: '100vh', color: brand.fg }}>
+
+      {/* Sticky nav */}
+      <nav style={{
+        position: 'sticky', top: 0, zIndex: 100,
+        background: navBg,
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
+        borderBottom: `1px solid ${scrolled ? (darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)') : 'transparent'}`,
+        transition: 'all 0.3s ease',
+      }}>
+        <div style={{ maxWidth: 960, margin: '0 auto', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Link href="/examples" style={{ fontSize: 13, color: brand.fg, opacity: 0.5, textDecoration: 'none', whiteSpace: 'nowrap', marginRight: 8 }}>← All</Link>
+          <div style={{ display: 'flex', gap: 4, overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+            {brand.sections.map((section, i) => (
+              <button key={i} onClick={() => setActiveSection(i)} style={{
+                padding: '6px 14px', borderRadius: 20, border: 'none',
+                background: activeSection === i ? brand.accent : 'transparent',
+                color: activeSection === i ? (isDark(brand.accent) ? '#fff' : '#000') : (darkBg ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'),
+                fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'all 0.2s ease',
+              }}>
+                {section}
+              </button>
             ))}
           </div>
         </div>
-      </section>
+      </nav>
 
-      {/* Content Templates */}
-      <section className="py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className={`text-xs font-bold uppercase tracking-widest ${subColor} mb-6`}>Content Templates</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {brand.templates.map((t, i) => (
-              <div
-                key={i}
-                className="p-5 rounded-2xl border"
-                style={{
-                  borderColor: brand.accent + '40',
-                  background: darkBg ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-                }}
-              >
-                <div
-                  className="text-xs font-bold mb-2 uppercase tracking-widest"
-                  style={{ color: brand.accent }}
-                >
-                  {t.platform}
-                </div>
-                <p className={`text-sm italic ${textColor} opacity-90`}>&ldquo;{t.example}&rdquo;</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Content */}
+      <main style={{ maxWidth: 960, margin: '0 auto', padding: '40px 24px 100px' }}>
+        {sectionComponents[activeSection]}
+      </main>
 
-      {/* Anti-Patterns */}
-      <section className="py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className={`text-xs font-bold uppercase tracking-widest ${subColor} mb-6`}>Anti-Patterns</h2>
-          <div className="space-y-2">
-            {brand.antiPatterns.map((ap, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20"
-              >
-                <span className="text-red-400 mt-0.5">✕</span>
-                <span className={`text-sm ${textColor}`}>{ap}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Image Style */}
-      <section className="py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className={`text-xs font-bold uppercase tracking-widest ${subColor} mb-4`}>Image Generation Guidance</h2>
-          <div
-            className="p-6 rounded-2xl border"
-            style={{
-              borderColor: brand.accent + '40',
-              background: darkBg ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-            }}
-          >
-            <p className={`text-sm ${textColor} leading-relaxed`}>{brand.imageStyle}</p>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 px-4 text-center">
-        <div className="max-w-2xl mx-auto">
-          <p className={`text-lg ${subColor} mb-6`}>Want a skill file like this for your brand?</p>
-          <Link
-            href="/generate"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-opacity hover:opacity-90"
-            style={{
-              background: brand.accent,
-              color: isDark(brand.accent) ? '#fff' : '#000',
-            }}
-          >
-            Generate yours free →
-          </Link>
-        </div>
-      </section>
+      {/* Footer */}
+      <footer style={{ borderTop: `1px solid ${darkBg ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, padding: 24, textAlign: 'center' }}>
+        <Link href="/generate" style={{
+          display: 'inline-block', background: brand.accent, color: isDark(brand.accent) ? '#fff' : '#000',
+          padding: '12px 32px', borderRadius: 12, fontSize: 15, fontWeight: 700, textDecoration: 'none',
+          marginBottom: 12,
+        }}>
+          Generate yours free →
+        </Link>
+        <p style={{ fontSize: 12, color: brand.fg, opacity: 0.3, marginTop: 12 }}>
+          {brand.name} Brand Portfolio — Generated by BrandSkill.com
+        </p>
+      </footer>
     </div>
   )
 }
