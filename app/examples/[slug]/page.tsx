@@ -1,42 +1,5 @@
-'use client'
-import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
-
-// ─── Types ───
-
-type ColorSwatch = { hex: string; name: string; desc: string }
-type VoiceRule = { title: string; good: string; bad: string }
-type SocialPost = { platform: string; copy: string; handle?: string }
-type AntiPattern = { rule: string; reason: string }
-type ImageRule = { always: string[]; never: string[] }
-
-type Brand = {
-  name: string
-  domain: string
-  principle: string
-  voice: string
-  target: string
-  differentiator: string
-  positioning: string
-  colors: ColorSwatch[]
-  primaryFont: { name: string; desc: string }
-  bodyFont: { name: string; size: string; desc: string }
-  voiceRules: VoiceRule[]
-  socialPosts: SocialPost[]
-  emailSubjects: string[]
-  emailOpener: string
-  blogOpener: string
-  adHeadlines: string[]
-  antiPatterns: AntiPattern[]
-  imageRules: ImageRule
-  bg: string
-  fg: string
-  accent: string
-  accentAlt: string
-  sections: string[]
-}
-
-// ─── Brand Data ───
+import { notFound } from 'next/navigation'
+import BrandPortfolio, { Brand } from './BrandPortfolio'
 
 const BRANDS: Record<string, Brand> = {
   apple: {
@@ -53,7 +16,7 @@ const BRANDS: Record<string, Brand> = {
       { hex: '#ffffff', name: 'White', desc: 'Primary background' },
       { hex: '#86868b', name: 'Stone', desc: 'Body text, secondary info' },
     ],
-    primaryFont: { name: 'SF Pro Display', desc: 'Tight tracking. Never bold unless size alone isn\'t enough.' },
+    primaryFont: { name: 'SF Pro Display', desc: "Tight tracking. Never bold unless size alone isn't enough." },
     bodyFont: { name: 'SF Pro Text', size: '17px', desc: '1.47 line height for comfortable reading across every surface.' },
     voiceRules: [
       { title: 'Lead with the feeling, not the feature', good: 'The camera that sees what your eye misses.', bad: '12MP camera with advanced computational photography' },
@@ -67,7 +30,7 @@ const BRANDS: Record<string, Brand> = {
       { platform: 'X / Twitter', handle: '@Apple', copy: 'iPhone 16. The camera that outthinks the moment.' },
       { platform: 'LinkedIn', handle: 'Apple', copy: "The best tool is the one that disappears. That's what we spent 10 years building into the new MacBook Pro." },
     ],
-    emailSubjects: ['iPhone. Hello, again.', 'Mac. Built for what\'s next.', 'The new iPad. Impossibly thin.'],
+    emailSubjects: ["iPhone. Hello, again.", "Mac. Built for what's next.", 'The new iPad. Impossibly thin.'],
     emailOpener: 'Some things you have to see to believe. The new Apple Vision Pro is one of them.',
     blogOpener: 'Most cameras record light. iPhone understands it.',
     adHeadlines: ['Think different.', 'Shot on iPhone.', 'The new MacBook.', 'Hello, iPhone.'],
@@ -83,7 +46,6 @@ const BRANDS: Record<string, Brand> = {
       never: ['Gradients or lens flare', 'Stock-photo aesthetics', 'Busy environments or props', 'Humans unless using the product'],
     },
     bg: '#ffffff', fg: '#1d1d1f', accent: '#0066cc', accentAlt: '#1d1d1f',
-    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   stripe: {
     name: 'Stripe', domain: 'stripe.com',
@@ -96,10 +58,10 @@ const BRANDS: Record<string, Brand> = {
       { hex: '#635bff', name: 'Stripe Purple', desc: "The brand's most distinctive element" },
       { hex: '#0a2540', name: 'Deep Navy', desc: 'Headlines and dark backgrounds' },
       { hex: '#00d4ff', name: 'Electric Teal', desc: 'Highlights and data viz' },
-      { hex: '#f6f9fc', name: 'Fog', desc: "Page backgrounds — the brand's 'clean' feel" },
+      { hex: '#f6f9fc', name: 'Fog', desc: "Page backgrounds" },
       { hex: '#32d583', name: 'Growth Green', desc: 'Positive states and growth indicators' },
     ],
-    primaryFont: { name: 'Sohne', desc: 'Tight, confident, geometric. The brand\'s most visible typographic decision.' },
+    primaryFont: { name: 'Sohne', desc: "Tight, confident, geometric. The brand's most visible typographic decision." },
     bodyFont: { name: 'Inter', size: '16px', desc: 'Technical clarity at all sizes. Code uses JetBrains Mono.' },
     voiceRules: [
       { title: "Respect the reader's intelligence", good: 'Stripe uses machine learning to route transactions across acquiring banks based on real-time success rates.', bad: 'Stripe uses AI to make your payments work better.' },
@@ -129,7 +91,6 @@ const BRANDS: Record<string, Brand> = {
       never: ['Photos of people handing over credit cards', 'Coins or generic fintech imagery', 'Anything that looks like a bank', 'Stock business photography'],
     },
     bg: '#0a2540', fg: '#ffffff', accent: '#635bff', accentAlt: '#00d4ff',
-    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   linear: {
     name: 'Linear', domain: 'linear.app',
@@ -162,7 +123,7 @@ const BRANDS: Record<string, Brand> = {
     emailSubjects: ['Linear 3.0 — everything, faster.', 'New: cycles that actually work', 'Your roadmap, finally under control'],
     emailOpener: "We built Linear because we were frustrated. Every tool we used was slow, bloated, and clearly designed to impress executives in a demo — not help engineers ship faster.",
     blogOpener: "Speed is not a feature. Speed is respect.",
-    adHeadlines: ['Software built for people who hate slow software.', 'The issue tracker you\'ll actually enjoy using.', 'Ship faster. No exceptions.'],
+    adHeadlines: ['Software built for people who hate slow software.', "The issue tracker you'll actually enjoy using.", 'Ship faster. No exceptions.'],
     antiPatterns: [
       { rule: '"Productivity" as a standalone promise', reason: "Everyone says this. It means nothing." },
       { rule: 'Emoji in serious product copy', reason: "Linear is not playful — it's intentional." },
@@ -175,7 +136,6 @@ const BRANDS: Record<string, Brand> = {
       never: ['Light mode anything', 'Stock photos of teams in meetings', 'Charts that look like PowerPoint', 'Anything soft or rounded'],
     },
     bg: '#1e1e2e', fg: '#ffffff', accent: '#5e6ad2', accentAlt: '#f65866',
-    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   notion: {
     name: 'Notion', domain: 'notion.so',
@@ -205,7 +165,7 @@ const BRANDS: Record<string, Brand> = {
       { platform: 'Instagram', handle: '@notionhq', copy: "Build the system that works for your brain.\n\nNot someone else's.\n\nStart free →" },
       { platform: 'LinkedIn', handle: 'Notion', copy: "The best teams we know share one trait: they have a single source of truth. Here's how to build yours." },
     ],
-    emailSubjects: ['A new way to organize everything.', 'Your team\'s new home base.', 'The blank page that becomes everything.'],
+    emailSubjects: ['A new way to organize everything.', "Your team's new home base.", 'The blank page that becomes everything.'],
     emailOpener: "We think every team deserves a place where everything lives — docs, tasks, wikis, and databases — all connected, all searchable, all yours.",
     blogOpener: "The problem with most productivity tools is that they try to change how you think. Notion does the opposite.",
     adHeadlines: ['Your all-in-one workspace.', 'Write. Plan. Organize. Together.', 'One tool. Everything in it.'],
@@ -221,7 +181,6 @@ const BRANDS: Record<string, Brand> = {
       never: ['Dark mode (Notion is light-first)', 'Abstract or conceptual imagery', 'Stock photos of people at laptops', 'Cluttered or overwhelming layouts'],
     },
     bg: '#ffffff', fg: '#1a1a1a', accent: '#000000', accentAlt: '#2eaadc',
-    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   figma: {
     name: 'Figma', domain: 'figma.com',
@@ -240,14 +199,14 @@ const BRANDS: Record<string, Brand> = {
     primaryFont: { name: 'Inter', desc: 'Universal, legible, and community-beloved. Fits the collaborative spirit perfectly.' },
     bodyFont: { name: 'DM Sans', size: '16px', desc: 'Warm and approachable for marketing copy. Friendly without being cutesy.' },
     voiceRules: [
-      { title: 'Celebrate the process, not just the output', good: "Great design happens in the comments, the handoffs, and the 11pm Slack messages.", bad: 'Create stunning designs with Figma\'s professional design tools.' },
+      { title: 'Celebrate the process, not just the output', good: "Great design happens in the comments, the handoffs, and the 11pm Slack messages.", bad: "Create stunning designs with Figma's professional design tools." },
       { title: 'Be playful when the moment allows', good: "Your design is one shared link away from becoming everyone's problem. In a good way.", bad: 'Figma makes it easy to share your designs with stakeholders for review.' },
       { title: 'Design is for everyone', good: "Designers, developers, product managers — everyone has a seat at the table.", bad: 'Professional design software for UI/UX designers.' },
       { title: 'Show the mess, not just the finish', good: "Figma is where your best work starts ugly. That's the point.", bad: 'Create pixel-perfect designs from the very first frame.' },
-      { title: 'Community first', good: "Built by designers, improved by millions of them. The plugin ecosystem is all community.", bad: 'Figma offers an extensive library of plugins for enhanced functionality.' },
+      { title: 'Community first', good: "Built by designers, improved by millions of them.", bad: 'Figma offers an extensive library of plugins for enhanced functionality.' },
     ],
     socialPosts: [
-      { platform: 'X / Twitter', handle: '@figma', copy: 'Design together, ship faster. Figma brings your whole team into the creative process — not just the designers.' },
+      { platform: 'X / Twitter', handle: '@figma', copy: "Design together, ship faster. Figma brings your whole team into the creative process — not just the designers." },
       { platform: 'Instagram', handle: '@figma', copy: "Great design happens in the comments, the handoffs, and the 11pm Slack messages.\n\nBuild it together." },
       { platform: 'LinkedIn', handle: 'Figma', copy: "The gap between design and development costs companies billions. Here's how teams are closing it." },
     ],
@@ -267,7 +226,6 @@ const BRANDS: Record<string, Brand> = {
       never: ['Solo designer in isolation', 'Corporate or sterile environments', 'Overly polished mockups that hide the process', 'Monochrome — Figma loves color'],
     },
     bg: '#ffffff', fg: '#1a1a1a', accent: '#a259ff', accentAlt: '#f24e1e',
-    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   vercel: {
     name: 'Vercel', domain: 'vercel.com',
@@ -288,16 +246,16 @@ const BRANDS: Record<string, Brand> = {
     voiceRules: [
       { title: 'Lead with speed metrics', good: 'Deploy globally in 35 seconds. No config.', bad: "Vercel makes it easy and fast to deploy your applications anywhere in the world." },
       { title: 'Short sentences. Period.', good: 'Zero config. Infinite scale. Ship today.', bad: 'With Vercel, you can deploy your frontend applications quickly and easily without needing to configure anything.' },
-      { title: 'Talk to the developer, not the manager', good: 'npx create-next-app@latest. That\'s it. You\'re live.', bad: 'Vercel enables engineering teams to increase deployment velocity.' },
+      { title: 'Talk to the developer, not the manager', good: "npx create-next-app@latest. That's it. You're live.", bad: 'Vercel enables engineering teams to increase deployment velocity.' },
       { title: 'Concrete over vague', good: '40ms global response time. 99.99% uptime. Real numbers.', bad: "Blazing fast performance you can count on." },
       { title: 'The product speaks. You amplify.', good: 'Zero config. Maximum performance.', bad: "We're proud to offer an industry-leading developer experience." },
     ],
     socialPosts: [
-      { platform: 'X / Twitter', handle: '@vercel', copy: 'Deploy in seconds. Scale to millions. Zero config.\n\nThat\'s Vercel.' },
+      { platform: 'X / Twitter', handle: '@vercel', copy: "Deploy in seconds. Scale to millions. Zero config.\n\nThat's Vercel." },
       { platform: 'X / Twitter', handle: '@vercel', copy: 'v0. Type a prompt. Get a UI. Ship it.\n\nTry it now →' },
-      { platform: 'LinkedIn', handle: 'Vercel', copy: 'Frontend teams using Vercel ship 3x faster than teams managing their own infrastructure. Here\'s the data.' },
+      { platform: 'LinkedIn', handle: 'Vercel', copy: "Frontend teams using Vercel ship 3x faster than teams managing their own infrastructure. Here's the data." },
     ],
-    emailSubjects: ['Your site is 3x faster. Here\'s what changed.', 'New: Edge Functions now in 100+ regions', 'Deploy in 1 click. Seriously.'],
+    emailSubjects: ["Your site is 3x faster. Here's what changed.", 'New: Edge Functions now in 100+ regions', 'Deploy in 1 click. Seriously.'],
     emailOpener: "Your last deployment took 4 minutes. We just made that 23 seconds. Here's what changed.",
     blogOpener: "Speed is not a feature you add later. It's a decision you make on day one.",
     adHeadlines: ['The frontend cloud. Ship faster.', 'Deploy. Scale. Repeat.', 'From localhost to global in seconds.'],
@@ -313,7 +271,6 @@ const BRANDS: Record<string, Brand> = {
       never: ['Light mode UI shots', 'Stock photos of people', 'Generic cloud imagery', 'Anything that looks like a SaaS dashboard from 2018'],
     },
     bg: '#000000', fg: '#ffffff', accent: '#0070f3', accentAlt: '#ffffff',
-    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   framer: {
     name: 'Framer', domain: 'framer.com',
@@ -329,14 +286,14 @@ const BRANDS: Record<string, Brand> = {
       { hex: '#ffffff', name: 'White', desc: 'Text and light surfaces' },
       { hex: '#7b61ff', name: 'Violet', desc: 'Gradient midpoint and UI accents' },
     ],
-    primaryFont: { name: 'Inter', desc: 'Clean and modern. Framer lets the product speak — the typography stays out of the way.' },
+    primaryFont: { name: 'Inter', desc: "Clean and modern. Framer lets the product speak — the typography stays out of the way." },
     bodyFont: { name: 'Framer Display (custom)', size: '18px', desc: 'Used in hero moments and feature callouts. Bold and unmistakable.' },
     voiceRules: [
-      { title: 'Lead with motion as the differentiator', good: "It's not a website. It's a website that moves.", bad: 'Build beautiful websites with Framer\'s intuitive drag-and-drop interface.' },
+      { title: 'Lead with motion as the differentiator', good: "It's not a website. It's a website that moves.", bad: "Build beautiful websites with Framer's intuitive drag-and-drop interface." },
       { title: 'Make bold claims. Own them.', good: 'Framer is the fastest way to build websites that feel alive.', bad: "Framer might be a good option if you're looking for a flexible website builder." },
       { title: 'The audience is creative. Match their energy.', good: 'Your portfolio is the first impression. Make it move.', bad: 'Framer helps you create a professional online portfolio website.' },
       { title: "Don't explain. Show.", good: 'See it. Build it. Ship it. Today.', bad: 'Framer allows you to design and publish websites with built-in animation capabilities.' },
-      { title: 'Position against the category, not just competitors', good: 'Not a website builder. A creative tool that happens to publish to the web.', bad: "Framer is similar to other website builders but with more design features." },
+      { title: 'Position against the category', good: 'Not a website builder. A creative tool that happens to publish to the web.', bad: "Framer is similar to other website builders but with more design features." },
     ],
     socialPosts: [
       { platform: 'X / Twitter', handle: '@framer', copy: 'Build websites that actually move. No code. No limits. No compromises.\n\nJust Framer.' },
@@ -359,7 +316,6 @@ const BRANDS: Record<string, Brand> = {
       never: ['Static screenshots', 'Light backgrounds', 'Template galleries', 'Anything that looks like a normal website builder'],
     },
     bg: '#141414', fg: '#ffffff', accent: '#0055ff', accentAlt: '#ff4488',
-    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   loom: {
     name: 'Loom', domain: 'loom.com',
@@ -382,12 +338,12 @@ const BRANDS: Record<string, Brand> = {
       { title: 'Show the face behind the message', good: "When you see someone's face, you understand them. Loom brings that to async.", bad: "Record your screen and webcam to communicate your message effectively." },
       { title: 'Celebrate the time saved, not the tool', good: "Your team gets 45 minutes back. Every. Single. Day.", bad: "Loom is a fast and efficient way to record and share video messages." },
       { title: 'Human warmth in every line', good: "Hit record. Say what you mean. Send it. Done.", bad: "Leverage Loom's video messaging capabilities to enhance asynchronous communication." },
-      { title: "Position time as the most precious resource", good: "Meetings are expensive. A Loom is free.", bad: "Save time by recording videos instead of scheduling meetings." },
+      { title: "Time is the most precious resource", good: "Meetings are expensive. A Loom is free.", bad: "Save time by recording videos instead of scheduling meetings." },
     ],
     socialPosts: [
       { platform: 'X / Twitter', handle: '@loom', copy: "That 45-minute meeting? It's a 3-minute Loom now.\n\nYour team's calendar just exhaled." },
       { platform: 'Instagram', handle: '@loom', copy: "Show your face.\nShare your thinking.\nSkip the calendar invite.\n\nHit record." },
-      { platform: 'LinkedIn', handle: 'Loom', copy: "The average knowledge worker attends 62 meetings per month. 71% of those are considered unproductive. We built Loom to fix that." },
+      { platform: 'LinkedIn', handle: 'Loom', copy: "The average knowledge worker attends 62 meetings per month. 71% are considered unproductive. We built Loom to fix that." },
     ],
     emailSubjects: ['I recorded this instead of scheduling a meeting.', 'Your team just got 4 hours back this week.', 'The meeting that became a Loom.'],
     emailOpener: "We built Loom because we believed that seeing someone's face — even async — changes how you understand them. We were right.",
@@ -396,7 +352,7 @@ const BRANDS: Record<string, Brand> = {
     antiPatterns: [
       { rule: 'Making async feel like a compromise', reason: "Loom positions async as superior, not secondary." },
       { rule: 'Corporate or impersonal language', reason: "Loom is warm. It's about human connection." },
-      { rule: 'Leading with features', reason: "Lead with the feeling — time saved, connection made." },
+      { rule: 'Leading with features over feeling', reason: "Lead with the feeling — time saved, connection made." },
       { rule: '"Screen recording" as the positioning', reason: "Loom is communication, not a recording tool." },
       { rule: 'Implying meetings are always necessary', reason: "Loom questions the meeting. Always." },
     ],
@@ -405,7 +361,6 @@ const BRANDS: Record<string, Brand> = {
       never: ['Fake-looking stock photos', 'Corporate conference rooms', 'Screens without the Loom UI', 'Cold or sterile environments'],
     },
     bg: '#f8f8f8', fg: '#1a1a1a', accent: '#625df5', accentAlt: '#ff9500',
-    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   webflow: {
     name: 'Webflow', domain: 'webflow.com',
@@ -425,10 +380,10 @@ const BRANDS: Record<string, Brand> = {
     bodyFont: { name: 'Inter', size: '16px', desc: 'Clear and functional. Lets the product capabilities speak for themselves.' },
     voiceRules: [
       { title: 'Speak to the frustration of creative limitation', good: "You've been waiting for a developer. Webflow is the developer.", bad: "Webflow offers powerful tools for building professional websites." },
-      { title: 'Celebrate visual power with technical depth', good: "Every interaction, animation, and breakpoint — exactly how you designed it. In the browser.", bad: "Design beautiful, responsive websites with Webflow's intuitive interface." },
       { title: "Don't simplify. Sophisticate.", good: "From grid to flexbox to custom CSS — all visual, all yours, all in the browser.", bad: "No coding required. Just drag and drop." },
       { title: "Position vs. the 'need a developer' narrative", good: "Fire your developer. (Just kidding. But kind of not.)", bad: "Webflow makes it easy to build websites without knowing how to code." },
       { title: 'The designer is the expert. Treat them as such.', good: "You already know how it should look. Webflow makes sure it does.", bad: "Even beginners can create stunning websites with Webflow!" },
+      { title: 'Own the sophistication', good: "Every interaction, animation, and breakpoint — exactly how you designed it.", bad: "Design beautiful, responsive websites with Webflow's intuitive interface." },
     ],
     socialPosts: [
       { platform: 'X / Twitter', handle: '@webflow', copy: "You've been waiting for a developer.\n\nWebflow is the developer." },
@@ -448,10 +403,9 @@ const BRANDS: Record<string, Brand> = {
     ],
     imageRules: {
       always: ['Bold, high-contrast UI screenshots', 'Complex-looking interfaces that feel accessible', 'Blue gradients on dark backgrounds', 'Real websites built in Webflow'],
-      never: ['Simple or sparse UI screenshots (implies limited capability)', 'Stock photos of people pointing at screens', 'Generic SaaS dashboard aesthetic', 'Anything that looks like a basic website builder'],
+      never: ['Simple or sparse UI (implies limited capability)', 'Stock photos of people pointing at screens', 'Generic SaaS dashboard aesthetic', 'Anything that looks like a basic website builder'],
     },
     bg: '#1a1a2e', fg: '#ffffff', accent: '#4353ff', accentAlt: '#146ef5',
-    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   shopify: {
     name: 'Shopify', domain: 'shopify.com',
@@ -468,18 +422,18 @@ const BRANDS: Record<string, Brand> = {
       { hex: '#f9fafb', name: 'Smoke', desc: 'Subtle backgrounds and page sections' },
     ],
     primaryFont: { name: 'ShopifySans', desc: 'Custom typeface. Friendly and professional — the personality of the brand in letterform.' },
-    bodyFont: { name: 'Inter', size: '16px', desc: 'Clean and readable. The merchant\'s experience is always the priority.' },
+    bodyFont: { name: 'Inter', size: '16px', desc: "Clean and readable. The merchant's experience is always the priority." },
     voiceRules: [
       { title: 'Celebrate ambition at every level', good: "Your first sale is closer than you think. And your millionth? Just as possible.", bad: "Shopify helps businesses of all sizes sell online and in person." },
       { title: 'Make the path to success feel real', good: "From idea to first sale in a weekend. Thousands of merchants do it every day.", bad: "Get started with Shopify's easy-to-use platform." },
-      { title: 'Use proof, not promises', good: "1M+ merchants in 175 countries trust Shopify. Including your favorite indie brand.", bad: "Shopify is the world's leading commerce platform." },
       { title: 'The emotional journey is the story', good: "That moment your first sale notification hits — we built everything for that moment.", bad: "Shopify provides merchants with the tools they need to succeed in commerce." },
       { title: 'Talk about the seller, not the software', good: "You built something worth selling. We'll handle everything else.", bad: "Shopify offers inventory management, payment processing, and analytics tools." },
+      { title: 'Use proof, not promises', good: "1M+ merchants in 175 countries trust Shopify. Including your favorite indie brand.", bad: "Shopify is the world's leading commerce platform." },
     ],
     socialPosts: [
       { platform: 'X / Twitter', handle: '@Shopify', copy: "Your first sale is closer than you think.\n\nShopify gets you there." },
       { platform: 'Instagram', handle: '@shopify', copy: "From idea to first sale in a weekend.\n\nReal sellers. Real stories.\n\n→ Link in bio." },
-      { platform: 'LinkedIn', handle: 'Shopify', copy: "Every big brand started with one sale. Here are 10 merchants who built theirs from nothing. Their first Shopify day vs. today." },
+      { platform: 'LinkedIn', handle: 'Shopify', copy: "Every big brand started with one sale. Here are 10 merchants who built theirs from nothing." },
     ],
     emailSubjects: ['Your store is ready. Your customers are waiting.', 'Your first sale could be this weekend.', 'The brands you love? They started here.'],
     emailOpener: "Someone is out there right now looking for exactly what you make. Shopify gets you in front of them.",
@@ -497,7 +451,6 @@ const BRANDS: Record<string, Brand> = {
       never: ['Stock photos of generic business people', 'Cluttered product grids', 'Cold or corporate office imagery', 'Anything that looks like accounting software'],
     },
     bg: '#ffffff', fg: '#1a1a1a', accent: '#96bf48', accentAlt: '#5c6ac4',
-    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   duolingo: {
     name: 'Duolingo', domain: 'duolingo.com',
@@ -540,10 +493,9 @@ const BRANDS: Record<string, Brand> = {
     ],
     imageRules: {
       always: ['Duo the owl in increasingly unhinged situations', 'Bright, flat illustration style', 'Bold solid colors', 'Maximum personality in every frame'],
-      never: ['Realistic photography (unless it\'s Duo photobombing it)', 'Muted or sophisticated color palettes', 'Anything that looks like a corporate app', 'Earnest without irony'],
+      never: ["Realistic photography (unless Duo is photobombing it)", 'Muted or sophisticated color palettes', 'Anything that looks like a corporate app', 'Earnest without irony'],
     },
     bg: '#ffffff', fg: '#1a1a1a', accent: '#58cc02', accentAlt: '#ff4b4b',
-    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
   superhuman: {
     name: 'Superhuman', domain: 'superhuman.com',
@@ -563,7 +515,7 @@ const BRANDS: Record<string, Brand> = {
     bodyFont: { name: 'Inter', size: '16px', desc: 'Precise and legible. No ornamentation. The content is the focus.' },
     voiceRules: [
       { title: 'Make speed feel like a moral imperative', good: "Time is the only non-renewable resource. We give you 2 hours of it back every day.", bad: "Superhuman helps you manage your email more efficiently." },
-      { title: 'Speak to the top 1% of email users', good: "Built for people who think 4 hours in email is not a personality trait — it's a problem.", bad: "Superhuman is great for anyone who uses email regularly." },
+      { title: 'Speak to the top 1% of email users', good: "Built for people who think 4 hours in email is a problem, not a personality trait.", bad: "Superhuman is great for anyone who uses email regularly." },
       { title: 'Specific numbers. Always.', good: "The average Superhuman user reaches inbox zero 4x faster. That's 2 hours back per day.", bad: "Superhuman dramatically speeds up your email experience." },
       { title: "Don't apologize for the price", good: "At $30/month, Superhuman costs less per hour than your coffee habit. Do the math.", bad: "While Superhuman is a premium product, many users find it worth the investment." },
       { title: 'Every interaction is a speed claim', good: "Open any email in under 100ms. Every time. No exceptions.", bad: "Superhuman is designed to be fast and responsive." },
@@ -573,9 +525,9 @@ const BRANDS: Record<string, Brand> = {
       { platform: 'X / Twitter', handle: '@Superhuman', copy: "Inbox zero in 23 minutes.\n\nThis is what Superhuman feels like." },
       { platform: 'LinkedIn', handle: 'Superhuman', copy: "We surveyed 5,000 executives. The #1 productivity drain? Email. Here's what the fastest among them do differently." },
     ],
-    emailSubjects: ['You could get through email in half the time.', 'Inbox zero in 23 minutes. Here\'s how.', 'The 2 hours you\'re leaving in your inbox every day.'],
+    emailSubjects: ['You could get through email in half the time.', "Inbox zero in 23 minutes. Here's how.", "The 2 hours you're leaving in your inbox every day."],
     emailOpener: "We built Superhuman for people who believe their email shouldn't take 4 hours. It doesn't have to.",
-    blogOpener: "I spent 6 months tracking exactly how long CEOs spend in email. The average was 4.1 hours per day. The Superhuman users? 1.8 hours. Here's everything they do differently.",
+    blogOpener: "I spent 6 months tracking exactly how long CEOs spend in email. The average was 4.1 hours per day. The Superhuman users? 1.8 hours.",
     adHeadlines: ['Spend less time in email. Do more of everything else.', 'The fastest email experience ever made.', 'Inbox zero, every day. No exceptions.'],
     antiPatterns: [
       { rule: 'Apologizing for the price', reason: "$30/month is a bargain for 2 hours back per day. Do the math out loud." },
@@ -589,383 +541,8 @@ const BRANDS: Record<string, Brand> = {
       never: ['Light mode anything', 'Overflowing inboxes as the problem visual', 'Stock photos of people stressed at computers', 'Anything that looks like a basic email client'],
     },
     bg: '#1c1c1c', fg: '#ffffff', accent: '#e06c00', accentAlt: '#f5f0eb',
-    sections: ['Overview', 'Voice & Tone', 'Visual Identity', 'Social Media', 'Email', 'Blog & Editorial', 'Ad Creative', 'Anti-Patterns'],
   },
 }
-
-// ─── Utilities ───
-
-function isDark(hex: string) {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return (r * 299 + g * 587 + b * 114) / 1000 < 128
-}
-
-// ─── Fade-in component ───
-
-function FadeIn({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
-  const [visible, setVisible] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true) }, { threshold: 0.08 })
-    if (ref.current) obs.observe(ref.current)
-    return () => obs.disconnect()
-  }, [])
-  return (
-    <div ref={ref} className={className} style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(20px)', transition: `opacity 0.7s ease ${delay}s, transform 0.7s ease ${delay}s` }}>
-      {children}
-    </div>
-  )
-}
-
-// ─── Section: Overview ───
-
-function OverviewSection({ brand }: { brand: Brand }) {
-  const darkBg = isDark(brand.bg)
-  const textMuted = darkBg ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)'
-  const cardBg = darkBg ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
-  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
-
-  return (
-    <div>
-      <FadeIn>
-        <div style={{ textAlign: 'center', padding: '40px 0 32px' }}>
-          <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 12 }}>{brand.name} Brand Portfolio</h2>
-          <p style={{ fontSize: 18, color: textMuted, maxWidth: 540, margin: '0 auto' }}>A complete identity system for every surface.</p>
-        </div>
-      </FadeIn>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 32 }}>
-        {[
-          { label: 'Brand Principle', value: brand.principle },
-          { label: 'Voice', value: brand.voice },
-          { label: 'Target', value: brand.target },
-          { label: 'Differentiator', value: brand.differentiator },
-        ].map((item, i) => (
-          <FadeIn key={i} delay={i * 0.08}>
-            <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{item.label}</span>
-              <span style={{ fontSize: 16, fontWeight: 500, color: brand.fg, lineHeight: 1.4 }}>{item.value}</span>
-            </div>
-          </FadeIn>
-        ))}
-      </div>
-
-      <FadeIn delay={0.3}>
-        <div style={{ borderLeft: `3px solid ${brand.accent}`, paddingLeft: 24, paddingTop: 8, paddingBottom: 8, marginBottom: 32 }}>
-          <p style={{ fontSize: 19, color: brand.fg, fontWeight: 500, lineHeight: 1.5, fontStyle: 'italic' }}>{brand.positioning}</p>
-        </div>
-      </FadeIn>
-
-      <FadeIn delay={0.4}>
-        <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 20, padding: 28 }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Color Palette Preview</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-            {brand.colors.map(c => (
-              <div key={c.hex} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, background: c.hex, border: `2px solid ${darkBg ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'}`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} />
-                <span style={{ fontSize: 11, fontFamily: 'monospace', color: textMuted }}>{c.hex}</span>
-                <span style={{ fontSize: 10, color: textMuted, opacity: 0.7 }}>{c.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </FadeIn>
-    </div>
-  )
-}
-
-// ─── Section: Voice & Tone ───
-
-function VoiceToneSection({ brand }: { brand: Brand }) {
-  const darkBg = isDark(brand.bg)
-  const cardBg = darkBg ? 'rgba(255,255,255,0.04)' : '#ffffff'
-  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
-
-  return (
-    <div>
-      <FadeIn>
-        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Voice & Tone</h2>
-        <p style={{ fontSize: 17, color: brand.fg, opacity: 0.5, marginBottom: 32 }}>{brand.voiceRules.length} rules. No exceptions.</p>
-      </FadeIn>
-
-      {brand.voiceRules.map((rule, i) => (
-        <FadeIn key={i} delay={i * 0.07}>
-          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 16, padding: 24, marginBottom: 12 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: brand.accent, letterSpacing: '0.08em', marginBottom: 6 }}>0{i + 1}</div>
-            <h3 style={{ fontSize: 18, fontWeight: 600, color: brand.fg, marginBottom: 16, lineHeight: 1.3 }}>{rule.title}</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <div>
-                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: 'rgba(34,197,94,0.15)', color: '#22c55e', marginBottom: 8 }}>DO</span>
-                <p style={{ fontSize: 14, color: brand.fg, lineHeight: 1.5 }}>{rule.good}</p>
-              </div>
-              <div>
-                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: 'rgba(239,68,68,0.15)', color: '#ef4444', marginBottom: 8 }}>DON&apos;T</span>
-                <p style={{ fontSize: 14, color: brand.fg, opacity: 0.6, lineHeight: 1.5 }}>{rule.bad}</p>
-              </div>
-            </div>
-          </div>
-        </FadeIn>
-      ))}
-    </div>
-  )
-}
-
-// ─── Section: Visual Identity ───
-
-function VisualIdentitySection({ brand }: { brand: Brand }) {
-  const darkBg = isDark(brand.bg)
-  const textMuted = darkBg ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)'
-  const cardBg = darkBg ? 'rgba(255,255,255,0.05)' : '#f8f8f8'
-  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
-
-  return (
-    <div>
-      <FadeIn>
-        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Visual Identity</h2>
-        <p style={{ fontSize: 17, color: textMuted, marginBottom: 32 }}>Precision through restraint.</p>
-      </FadeIn>
-
-      <FadeIn delay={0.1}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Color Palette</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 48 }}>
-          {brand.colors.map((c, i) => (
-            <div key={i} style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${cardBorder}` }}>
-              <div style={{ background: c.hex, height: 88, display: 'flex', alignItems: 'flex-end', padding: '10px 12px' }}>
-                <span style={{ color: isDark(c.hex) ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.7)', fontSize: 12, fontWeight: 600, fontFamily: 'monospace' }}>{c.hex}</span>
-              </div>
-              <div style={{ padding: 12, background: darkBg ? 'rgba(255,255,255,0.05)' : '#fff' }}>
-                <div style={{ fontWeight: 600, fontSize: 13, color: brand.fg }}>{c.name}</div>
-                <div style={{ fontSize: 11, color: textMuted, marginTop: 3 }}>{c.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </FadeIn>
-
-      <FadeIn delay={0.2}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Typography</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 48 }}>
-          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Headlines</span>
-            <span style={{ fontSize: 28, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', lineHeight: 1.1 }}>{brand.primaryFont.name}</span>
-            <span style={{ fontSize: 12, color: textMuted, marginTop: 4 }}>{brand.primaryFont.desc}</span>
-          </div>
-          <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Body — {brand.bodyFont.size}</span>
-            <span style={{ fontSize: 17, color: brand.fg, lineHeight: 1.5 }}>{brand.bodyFont.name} — {brand.bodyFont.desc}</span>
-          </div>
-        </div>
-      </FadeIn>
-
-      <FadeIn delay={0.3}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Image Generation Rules</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <div style={{ background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 16, padding: 20 }}>
-            <div style={{ fontWeight: 700, fontSize: 13, color: '#22c55e', marginBottom: 12 }}>✓ Always</div>
-            {brand.imageRules.always.map((item, i) => (
-              <div key={i} style={{ fontSize: 13, color: brand.fg, padding: '4px 0', opacity: 0.85 }}>→ {item}</div>
-            ))}
-          </div>
-          <div style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: 20 }}>
-            <div style={{ fontWeight: 700, fontSize: 13, color: '#ef4444', marginBottom: 12 }}>✕ Never</div>
-            {brand.imageRules.never.map((item, i) => (
-              <div key={i} style={{ fontSize: 13, color: brand.fg, padding: '4px 0', opacity: 0.85 }}>✕ {item}</div>
-            ))}
-          </div>
-        </div>
-      </FadeIn>
-    </div>
-  )
-}
-
-// ─── Section: Social Media ───
-
-function SocialMediaSection({ brand }: { brand: Brand }) {
-  const darkBg = isDark(brand.bg)
-  const cardBg = darkBg ? 'rgba(255,255,255,0.05)' : '#ffffff'
-  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
-
-  return (
-    <div>
-      <FadeIn>
-        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Social Media</h2>
-        <p style={{ fontSize: 17, color: brand.fg, opacity: 0.5, marginBottom: 32 }}>How {brand.name} shows up on every platform.</p>
-      </FadeIn>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 40 }}>
-        {brand.socialPosts.map((post, i) => (
-          <FadeIn key={i} delay={i * 0.1}>
-            <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 20, padding: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{post.platform}</span>
-                {post.handle && <span style={{ fontSize: 12, color: brand.fg, opacity: 0.4, fontFamily: 'monospace' }}>{post.handle}</span>}
-              </div>
-              <p style={{ fontSize: 17, color: brand.fg, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{post.copy}</p>
-            </div>
-          </FadeIn>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── Section: Email ───
-
-function EmailSection({ brand }: { brand: Brand }) {
-  const darkBg = isDark(brand.bg)
-  const cardBg = darkBg ? 'rgba(255,255,255,0.05)' : '#ffffff'
-  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
-  const chipBg = darkBg ? 'rgba(255,255,255,0.08)' : '#f3f4f6'
-
-  return (
-    <div>
-      <FadeIn>
-        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Email</h2>
-        <p style={{ fontSize: 17, color: brand.fg, opacity: 0.5, marginBottom: 32 }}>Subject lines, openers, and the formula behind them.</p>
-      </FadeIn>
-
-      <FadeIn delay={0.1}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Subject Line Examples</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 32 }}>
-          {brand.emailSubjects.map((subj, i) => (
-            <div key={i} style={{ background: chipBg, borderRadius: 12, padding: '14px 18px', fontSize: 15, color: brand.fg, fontWeight: 500 }}>
-              📧 {subj}
-            </div>
-          ))}
-        </div>
-      </FadeIn>
-
-      <FadeIn delay={0.2}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Email Opener</p>
-        <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 20, padding: 28, marginBottom: 32 }}>
-          <p style={{ fontSize: 18, color: brand.fg, lineHeight: 1.6, fontStyle: 'italic' }}>&ldquo;{brand.emailOpener}&rdquo;</p>
-        </div>
-      </FadeIn>
-    </div>
-  )
-}
-
-// ─── Section: Blog & Editorial ───
-
-function BlogSection({ brand }: { brand: Brand }) {
-  const darkBg = isDark(brand.bg)
-  const cardBg = darkBg ? 'rgba(255,255,255,0.05)' : '#ffffff'
-  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
-
-  return (
-    <div>
-      <FadeIn>
-        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Blog & Editorial</h2>
-        <p style={{ fontSize: 17, color: brand.fg, opacity: 0.5, marginBottom: 32 }}>How {brand.name} opens a story.</p>
-      </FadeIn>
-
-      <FadeIn delay={0.1}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: brand.accent, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Opening Line Formula</p>
-        <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 20, padding: 36, marginBottom: 32 }}>
-          <p style={{ fontSize: 26, fontWeight: 600, color: brand.fg, lineHeight: 1.4, letterSpacing: '-0.01em' }}>&ldquo;{brand.blogOpener}&rdquo;</p>
-        </div>
-      </FadeIn>
-
-      <FadeIn delay={0.2}>
-        <div style={{ borderLeft: `3px solid ${brand.accent}`, paddingLeft: 20, paddingTop: 4, paddingBottom: 4 }}>
-          <p style={{ fontSize: 14, color: brand.fg, opacity: 0.6, lineHeight: 1.6 }}>
-            Editorial formula: Start with a contradiction, a reframe, or a number that makes the reader feel something. Never start with the product. Never start with a question. Lead with insight.
-          </p>
-        </div>
-      </FadeIn>
-    </div>
-  )
-}
-
-// ─── Section: Ad Creative ───
-
-function AdCreativeSection({ brand }: { brand: Brand }) {
-  const darkBg = isDark(brand.bg)
-  const cardBg = darkBg ? 'rgba(255,255,255,0.05)' : '#f8f8f8'
-  const cardBorder = darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
-
-  return (
-    <div>
-      <FadeIn>
-        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Ad Creative</h2>
-        <p style={{ fontSize: 17, color: brand.fg, opacity: 0.5, marginBottom: 32 }}>Headlines that stop the scroll.</p>
-      </FadeIn>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 40 }}>
-        {brand.adHeadlines.map((ad, i) => (
-          <FadeIn key={i} delay={i * 0.08}>
-            <div style={{
-              background: i % 2 === 0 ? brand.accent : (darkBg ? 'rgba(255,255,255,0.08)' : '#f3f4f6'),
-              borderRadius: 20,
-              padding: '32px 24px',
-              minHeight: 140,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              border: `1px solid ${cardBorder}`,
-            }}>
-              <p style={{
-                fontSize: 22,
-                fontWeight: 700,
-                color: i % 2 === 0 ? (isDark(brand.accent) ? '#fff' : '#000') : brand.fg,
-                lineHeight: 1.25,
-                letterSpacing: '-0.02em',
-              }}>
-                {ad}
-              </p>
-            </div>
-          </FadeIn>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── Section: Anti-Patterns ───
-
-function AntiPatternsSection({ brand }: { brand: Brand }) {
-  const darkBg = isDark(brand.bg)
-  const cardBg = darkBg ? 'rgba(255,255,255,0.04)' : '#ffffff'
-  const cardBorder = darkBg ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
-
-  return (
-    <div>
-      <FadeIn>
-        <h2 style={{ fontSize: 38, fontWeight: 700, color: brand.fg, letterSpacing: '-0.02em', marginBottom: 8 }}>Anti-Patterns</h2>
-        <p style={{ fontSize: 17, color: brand.fg, opacity: 0.5, marginBottom: 32 }}>What {brand.name} never does.</p>
-      </FadeIn>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {brand.antiPatterns.map((p, i) => (
-          <FadeIn key={i} delay={i * 0.07}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: 20, background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 14 }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 13, color: '#ef4444', fontWeight: 700 }}>✕</div>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 15, color: brand.fg, marginBottom: 4 }}>{p.rule}</div>
-                <div style={{ fontSize: 13, color: brand.fg, opacity: 0.5 }}>{p.reason}</div>
-              </div>
-            </div>
-          </FadeIn>
-        ))}
-      </div>
-
-      <FadeIn delay={0.4}>
-        <div style={{ marginTop: 40, background: brand.accent, borderRadius: 20, padding: '48px 32px', textAlign: 'center' }}>
-          <h3 style={{ color: isDark(brand.accent) ? '#fff' : '#000', fontSize: 36, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 8 }}>
-            {brand.principle}
-          </h3>
-          <p style={{ color: isDark(brand.accent) ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)', fontSize: 16 }}>
-            {brand.name} — {brand.domain}
-          </p>
-        </div>
-      </FadeIn>
-    </div>
-  )
-}
-
-// ─── Main ───
 
 export function generateStaticParams() {
   return Object.keys(BRANDS).map(slug => ({ slug }))
@@ -973,86 +550,6 @@ export function generateStaticParams() {
 
 export default function ExamplePage({ params }: { params: { slug: string } }) {
   const brand = BRANDS[params.slug]
-  const [activeSection, setActiveSection] = useState(0)
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  if (!brand) return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: '#f9fafb' }}>
-      <p style={{ color: '#6b7280' }}>Brand not found.</p>
-      <Link href="/examples" style={{ color: '#0d9488', textDecoration: 'underline' }}>← Back to examples</Link>
-    </div>
-  )
-
-  const darkBg = isDark(brand.bg)
-  const navBg = darkBg
-    ? (scrolled ? 'rgba(15,15,20,0.92)' : brand.bg)
-    : (scrolled ? 'rgba(255,255,255,0.92)' : brand.bg)
-
-  const sectionComponents = [
-    <OverviewSection key="overview" brand={brand} />,
-    <VoiceToneSection key="voice" brand={brand} />,
-    <VisualIdentitySection key="visual" brand={brand} />,
-    <SocialMediaSection key="social" brand={brand} />,
-    <EmailSection key="email" brand={brand} />,
-    <BlogSection key="blog" brand={brand} />,
-    <AdCreativeSection key="ad" brand={brand} />,
-    <AntiPatternsSection key="anti" brand={brand} />,
-  ]
-
-  return (
-    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif', background: brand.bg, minHeight: '100vh', color: brand.fg }}>
-
-      {/* Sticky nav */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 100,
-        background: navBg,
-        backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
-        borderBottom: `1px solid ${scrolled ? (darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)') : 'transparent'}`,
-        transition: 'all 0.3s ease',
-      }}>
-        <div style={{ maxWidth: 960, margin: '0 auto', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link href="/examples" style={{ fontSize: 13, color: brand.fg, opacity: 0.5, textDecoration: 'none', whiteSpace: 'nowrap', marginRight: 8 }}>← All</Link>
-          <div style={{ display: 'flex', gap: 4, overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-            {brand.sections.map((section, i) => (
-              <button key={i} onClick={() => setActiveSection(i)} style={{
-                padding: '6px 14px', borderRadius: 20, border: 'none',
-                background: activeSection === i ? brand.accent : 'transparent',
-                color: activeSection === i ? (isDark(brand.accent) ? '#fff' : '#000') : (darkBg ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'),
-                fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
-                transition: 'all 0.2s ease',
-              }}>
-                {section}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
-
-      {/* Content */}
-      <main style={{ maxWidth: 960, margin: '0 auto', padding: '40px 24px 100px' }}>
-        {sectionComponents[activeSection]}
-      </main>
-
-      {/* Footer */}
-      <footer style={{ borderTop: `1px solid ${darkBg ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, padding: 24, textAlign: 'center' }}>
-        <Link href="/generate" style={{
-          display: 'inline-block', background: brand.accent, color: isDark(brand.accent) ? '#fff' : '#000',
-          padding: '12px 32px', borderRadius: 12, fontSize: 15, fontWeight: 700, textDecoration: 'none',
-          marginBottom: 12,
-        }}>
-          Generate yours free →
-        </Link>
-        <p style={{ fontSize: 12, color: brand.fg, opacity: 0.3, marginTop: 12 }}>
-          {brand.name} Brand Portfolio — Generated by BrandSkill.com
-        </p>
-      </footer>
-    </div>
-  )
+  if (!brand) notFound()
+  return <BrandPortfolio brand={brand} />
 }
